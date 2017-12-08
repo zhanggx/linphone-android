@@ -29,7 +29,6 @@ import android.util.Log;
 
 import org.linphone.assistant.RemoteProvisioningActivity;
 import org.linphone.mediastream.Version;
-import org.linphone.tutorials.TutorialLauncherActivity;
 
 import static android.content.Intent.ACTION_MAIN;
 
@@ -99,9 +98,7 @@ public class LinphoneLauncherActivity extends Activity {
 
 	protected void onServiceReady() {
 		final Class<? extends Activity> classToStart;
-		if (getResources().getBoolean(R.bool.show_tutorials_instead_of_app)) {
-			classToStart = TutorialLauncherActivity.class;
-		} else if (getResources().getBoolean(R.bool.display_sms_remote_provisioning_activity) && LinphonePreferences.instance().isFirstRemoteProvisioning()) {
+		if (getResources().getBoolean(R.bool.display_sms_remote_provisioning_activity) && LinphonePreferences.instance().isFirstRemoteProvisioning()) {
 			classToStart = RemoteProvisioningActivity.class;
 		} else {
 			classToStart = LinphoneActivity.class;
@@ -126,7 +123,7 @@ public class LinphoneLauncherActivity extends Activity {
 					newIntent.setData(intent.getData());
 					if (Intent.ACTION_SEND.equals(action) && type != null) {
 						if (type.contains("text/")){
-							if(("text/plain").equals(type) && intent.getStringExtra(Intent.EXTRA_TEXT)!= null) {
+							if(("text/plain").equals(type) && (String)intent.getStringExtra(Intent.EXTRA_TEXT)!= null) {
 								stringFileShared = intent.getStringExtra(Intent.EXTRA_TEXT);
 								newIntent.putExtra("msgShared", stringFileShared);
 							} else if(((Uri) intent.getExtras().get(Intent.EXTRA_STREAM)) != null){
@@ -134,18 +131,22 @@ public class LinphoneLauncherActivity extends Activity {
 								newIntent.putExtra("fileShared", stringFileShared);
 							}
 						}else {
-							if(intent.getStringExtra(Intent.EXTRA_STREAM) != null){
+							if(((String) intent.getStringExtra(Intent.EXTRA_STREAM)) != null){
 								stringUriFileShared = intent.getStringExtra(Intent.EXTRA_STREAM);
 							}else {
 								fileUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
 								stringUriFileShared = LinphoneUtils.getRealPathFromURI(getBaseContext(), fileUri);
 								if(stringUriFileShared == null)
-									if(fileUri.getPath().contains("/0/1/mediakey:/local")) {
+									if(fileUri.getPath().contains("/0/1/mediakey:/local") || fileUri.getPath().contains("/ORIGINAL/NONE/")) {
 										stringUriFileShared = LinphoneUtils.getFilePath(getBaseContext(), fileUri);
 									}else
 										stringUriFileShared = fileUri.getPath();
 							}
 							newIntent.putExtra("fileShared", stringUriFileShared);
+						}
+					}else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null) {
+						if (type.startsWith("image/")) {
+							//TODO : Manage multiple files sharing
 						}
 					}else if( ACTION_CALL_LINPHONE.equals(action) && (intent.getStringExtra("NumberToCall") != null)) {
 						String numberToCall = intent.getStringExtra("NumberToCall");

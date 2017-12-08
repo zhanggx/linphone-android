@@ -138,8 +138,10 @@ private static AssistantActivity instance;
         mPrefs = LinphonePreferences.instance();
 		status.enableSideMenu(false);
 
-		accountCreator = LinphoneCoreFactory.instance().createAccountCreator(LinphoneManager.getLc(), LinphonePreferences.instance().getXmlrpcUrl());
-		accountCreator.setListener(this);
+		if (LinphoneManager.getLcIfManagerNotDestroyedOrNull() != null) {
+			accountCreator = LinphoneCoreFactory.instance().createAccountCreator(LinphoneManager.getLc(), LinphonePreferences.instance().getXmlrpcUrl());
+			accountCreator.setListener(this);
+		}
 
 		countryListAdapter = new CountryListAdapter(getApplicationContext());
         mListener = new LinphoneCoreListenerBase() {
@@ -169,7 +171,7 @@ private static AssistantActivity instance;
 							if (getResources().getBoolean(R.bool.use_phone_number_validation)
 									&& cfg.getDomain().equals(getString(R.string.default_domain))
 									&& LinphoneManager.getLc().getDefaultProxyConfig() != null) {
-								accountCreator.isAccountUsed();
+								loadAccountCreator(cfg).isAccountUsed();
 							} else {
 								success();
 							}
@@ -223,6 +225,27 @@ private static AssistantActivity instance;
 
 	public void updateStatusFragment(StatusFragment fragment) {
 		status = fragment;
+	}
+
+	private LinphoneAccountCreator loadAccountCreator(LinphoneProxyConfig cfg) {
+		LinphoneAccountCreator accountCreator =
+				LinphoneCoreFactory.instance().createAccountCreator(
+						LinphoneManager.getLc(),
+						LinphonePreferences.instance().getXmlrpcUrl());
+		LinphoneProxyConfig cfgTab[] = LinphoneManager.getLc().getProxyConfigList();
+		accountCreator.setListener(this);
+		int n = -1;
+		for (int i = 0 ; i < cfgTab.length ; i++) {
+			if (cfgTab[i].equals(cfg)) {
+				n = i;
+				break;
+			}
+		}
+		if (n >= 0) {
+			accountCreator.setDomain(mPrefs.getAccountDomain(n));
+			accountCreator.setUsername(mPrefs.getAccountUsername(n));
+		}
+		return accountCreator;
 	}
 
 	private void initUI() {
@@ -365,9 +388,6 @@ private static AssistantActivity instance;
 
 			proxyConfig.setIdentity(addr.asString());
 
-			if (LinphonePreferences.instance() != null)
-				proxyConfig.setContactUriParameters(LinphonePreferences.instance().getPushNotificationRegistrationID());
-
 			if (accountCreator.getPhoneNumber() != null && accountCreator.getPhoneNumber().length() > 0)
 				proxyConfig.setDialPrefix(accountCreator.getPrefix(accountCreator.getPhoneNumber()));
 
@@ -387,6 +407,9 @@ private static AssistantActivity instance;
 			lc.addAuthInfo(authInfo);
 
 			lc.setDefaultProxyConfig(proxyConfig);
+
+			if (LinphonePreferences.instance() != null)
+				LinphonePreferences.instance().setPushNotificationEnabled(true);
 
             if (ContactsManager.getInstance() != null)
                 ContactsManager.getInstance().fetchContactsAsync();
@@ -410,8 +433,8 @@ private static AssistantActivity instance;
 		configureLinphoneProxyConfig(accountCreator);
 	}
 
-	public void genericLogIn(String username, String userid, String password, String prefix, String domain, TransportType transport) {
-		saveCreatedAccount(username, userid, password, null, prefix, domain, transport);
+	public void genericLogIn(String username, String userid, String password, String displayname, String prefix, String domain, TransportType transport) {
+		saveCreatedAccount(username, userid, password, displayname, null, prefix, domain, transport);
 	}
 
 	private void display(AssistantFragmentsEnum fragment) {
@@ -507,7 +530,7 @@ private static AssistantActivity instance;
 		return phoneNumberWithCountry;
 	}
 
-	public void saveCreatedAccount(String username, String userid, String password, String ha1, String prefix, String domain, TransportType transport) {
+	public void saveCreatedAccount(String username, String userid, String password, String displayname, String ha1, String prefix, String domain, TransportType transport) {
 
 		username = LinphoneUtils.getDisplayableUsernameFromAddress(username);
 		domain = LinphoneUtils.getDisplayableUsernameFromAddress(domain);
@@ -524,6 +547,7 @@ private static AssistantActivity instance;
 				.setDomain(domain)
 				.setHa1(ha1)
 				.setUserId(userid)
+				.setDisplayName(displayname)
 				.setPassword(password);
 
 		if (prefix != null) {

@@ -94,6 +94,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -782,7 +783,7 @@ public class ChatFragment extends Fragment implements OnClickListener, LinphoneC
 
 	private void sendImageMessage(String path, int imageSize) {
 		if(path.contains("file://")) {
-			path = path.substring(7);
+			path = path.split("file:///", 2)[1];
 		}
 		if(path.contains("%20")) {
 			path = path.replace("%20", "-");
@@ -798,6 +799,26 @@ public class ChatFragment extends Fragment implements OnClickListener, LinphoneC
 		if (chatRoom != null && path != null && path.length() > 0 && isNetworkReachable) {
 			try {
 				Bitmap bm = BitmapFactory.decodeFile(path);
+
+				if (bm == null && path.contains("NONE")) {
+					Uri uri = Uri.parse(path);
+					InputStream is = null;
+					if (uri.getAuthority() != null) {
+						try {
+							is = getActivity().getContentResolver().openInputStream(uri);
+							bm = BitmapFactory.decodeStream(is);
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+						} finally {
+							try {
+								is.close();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+
 				if (bm != null) {
 					FileUploadPrepareTask task = new FileUploadPrepareTask(getActivity(), path, imageSize);
 					task.execute(bm);
@@ -815,7 +836,7 @@ public class ChatFragment extends Fragment implements OnClickListener, LinphoneC
 
 	private void sendFileSharingMessage(String path, int size ) {
 		if (path.contains("file://")) {
-			path = path.substring(7);
+			path = path.split("file:///", 2)[1];
 		} else if (path.contains("com.android.contacts/contacts/")) {
 			path = getCVSPathFromLookupUri(path).toString();
 		} else if (path.contains("vcard") || path.contains("vcf")) {
@@ -1676,20 +1697,29 @@ public class ChatFragment extends Fragment implements OnClickListener, LinphoneC
 								contentUri = Uri.parse(imageUri);
 							} else {
 								file = new File(imageUri);
-								contentUri = FileProvider.getUriForFile(getActivity(), "org.linphone.provider", file);
+								try {
+									contentUri = FileProvider.getUriForFile(getActivity(), "org.linphone.provider", file);
+								}catch(java.lang.IllegalArgumentException e){
+									Log.e("Something wrong happend : "+e);
+									contentUri = null;
+								}
 							}
 							String type = null;
-							String extension = MimeTypeMap.getFileExtensionFromUrl(contentUri.toString());
-							if (extension != null) {
-								type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+							if(contentUri != null) {
+								String extension = MimeTypeMap.getFileExtensionFromUrl(contentUri.toString());
+								if (extension != null) {
+									type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+								}
+								if (type != null) {
+									intent.setDataAndType(contentUri, type);
+								} else {
+									intent.setDataAndType(contentUri, "*/*");
+								}
+								intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
+								context.startActivity(intent);
+							}else{
+								LinphoneActivity.instance().displayCustomToast(getString(R.string.error_opening_file), Toast.LENGTH_LONG);
 							}
-							if(type != null) {
-								intent.setDataAndType(contentUri, type);
-							}else {
-								intent.setDataAndType(contentUri, "*/*");
-							}
-							intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
-							context.startActivity(intent);
 						}
 					});
 				}
@@ -1901,20 +1931,29 @@ public class ChatFragment extends Fragment implements OnClickListener, LinphoneC
 									contentUri = Uri.parse(imageUri);
 								} else {
 									file = new File(imageUri);
-									contentUri = FileProvider.getUriForFile(getActivity(), "org.linphone.provider", file);
+									try {
+										contentUri = FileProvider.getUriForFile(getActivity(), "org.linphone.provider", file);
+									}catch(java.lang.IllegalArgumentException e){
+										Log.e("Something wrong happend : "+e);
+										contentUri = null;
+									}
 								}
 							    String type = null;
-                                String extension = MimeTypeMap.getFileExtensionFromUrl(contentUri.toString());
-                                if (extension != null) {
-                                    type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                                }
-                                if(type != null) {
-                                    intent.setDataAndType(contentUri, type);
-                                }else {
-                                    intent.setDataAndType(contentUri, "*/*");
-                                }
-                                intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
-								context.startActivity(intent);
+								if(contentUri != null) {
+									String extension = MimeTypeMap.getFileExtensionFromUrl(contentUri.toString());
+									if (extension != null) {
+										type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+									}
+									if (type != null) {
+										intent.setDataAndType(contentUri, type);
+									} else {
+										intent.setDataAndType(contentUri, "*/*");
+									}
+									intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
+									context.startActivity(intent);
+								}else{
+									LinphoneActivity.instance().displayCustomToast(getString(R.string.error_opening_file), Toast.LENGTH_LONG);
+								}
 							}
 						});
 					}
