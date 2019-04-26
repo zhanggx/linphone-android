@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-import org.linphone.R;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -25,54 +24,55 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.TextView;
+import org.linphone.R;
 
 public class WelcomeFragment extends Fragment implements OnClickListener {
-	private Button createAccount, logLinphoneAccount, logGenericAccount, remoteProvisioning;
+    private TextView mCreateAccount, mLogLinphoneAccount, mLogGenericAccount, mRemoteProvisioning;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.assistant_welcome, container, false);
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.assistant_welcome, container, false);
 
-		createAccount = (Button) view.findViewById(R.id.create_account);
-		createAccount.setOnClickListener(this);
+        mCreateAccount = view.findViewById(R.id.create_account);
+        mCreateAccount.setOnClickListener(this);
 
-		logLinphoneAccount = (Button) view.findViewById(R.id.login_linphone);
-		if (getResources().getBoolean(R.bool.hide_linphone_accounts_in_assistant)) {
-			logLinphoneAccount.setVisibility(View.GONE);
-		} else {
-			logLinphoneAccount.setOnClickListener(this);
-		}
+        mLogLinphoneAccount = view.findViewById(R.id.login_linphone);
+        if (getResources().getBoolean(R.bool.hide_linphone_accounts_in_assistant)) {
+            mLogLinphoneAccount.setVisibility(View.GONE);
+        } else {
+            mLogLinphoneAccount.setOnClickListener(this);
+        }
 
-		logGenericAccount = (Button) view.findViewById(R.id.login_generic);
-		if (getResources().getBoolean(R.bool.hide_generic_accounts_in_assistant)) {
-			logGenericAccount.setVisibility(View.GONE);
-		} else {
-			logGenericAccount.setOnClickListener(this);
-		}
+        mLogGenericAccount = view.findViewById(R.id.login_generic);
+        if (getResources().getBoolean(R.bool.hide_generic_accounts_in_assistant)) {
+            mLogGenericAccount.setVisibility(View.GONE);
+        } else {
+            mLogGenericAccount.setOnClickListener(this);
+        }
 
-		remoteProvisioning = (Button) view.findViewById(R.id.remote_provisioning);
-		if (getResources().getBoolean(R.bool.hide_remote_provisioning_in_assistant)) {
-			remoteProvisioning.setVisibility(View.GONE);
-		} else {
-			remoteProvisioning.setOnClickListener(this);
-		}
+        mRemoteProvisioning = view.findViewById(R.id.remote_provisioning);
+        if (getResources().getBoolean(R.bool.hide_remote_provisioning_in_assistant)) {
+            mRemoteProvisioning.setVisibility(View.GONE);
+        } else {
+            mRemoteProvisioning.setOnClickListener(this);
+        }
 
-		return view;
-	}
+        return view;
+    }
 
-	@Override
-	public void onClick(View v) {
-		int id = v.getId();
-		if (id == R.id.login_generic) {
-			AssistantActivity.instance().displayLoginGeneric();
-		} else if (id == R.id.login_linphone) {
-			AssistantActivity.instance().displayLoginLinphone(null, null);
-		} else if (id == R.id.create_account) {
-			AssistantActivity.instance().displayCreateAccount();
-		} else if (id == R.id.remote_provisioning) {
-			AssistantActivity.instance().displayRemoteProvisioning();
-		}
-	}
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        if (id == R.id.login_generic) {
+            AssistantActivity.instance().displayLoginGeneric();
+        } else if (id == R.id.login_linphone) {
+            AssistantActivity.instance().displayLoginLinphone(null, null);
+        } else if (id == R.id.create_account) {
+            AssistantActivity.instance().displayCreateAccount();
+        } else if (id == R.id.remote_provisioning) {
+            AssistantActivity.instance().displayRemoteProvisioning("");
+        }
+    }
 }

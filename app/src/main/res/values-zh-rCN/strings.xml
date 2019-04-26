@@ -6,14 +6,11 @@
   <string name="addressbook_label">Linphone</string>
   <string name="notification_title">Linphone</string>
   <string name="wait_dialog_text">启动</string>
-  <string name="notification_registered">%s已注册</string>
-  <string name="notification_register_failure">%s无法注册</string>
   <string name="tunnel_host"></string>
   <string name="about_version">Linphone Android%s</string>
   <string name="about_liblinphone_version">Linphone Core%s</string>
-  <string name="about_text">GNU General Public License V2\n © 2010-2017 Belledonne Communications</string>
-  <string name="about_link">www.linphone.org</string>
   <string name="sync_account_name">linphone联系人</string>
+  <!--Notifications-->
   <!--Common-->
   <string name="username">用户名</string>
   <string name="phone_number">电话号码</string>
@@ -41,7 +38,6 @@
   <string name="decline">拒绝</string>
   <string name="conference">会话</string>
   <string name="link">关联</string>
-  <string name="link_account_popup">您想让您的电话号码关联帐户%s吗？</string>
   <string name="maybe_later">稍后再试</string>
   <string name="later">稍后</string>
   <string name="no">否</string>
@@ -86,13 +82,10 @@
   <string name="assistant_codec_down_question">您是否同意下载由Cisco Systems公司提供的OpenH264 Video Code</string>
   <string name="assistant_codec_downloading">下载由Cisco Systems公司提供的OpenH264 Video Code</string>
   <string name="assistant_openh264_downloading">下载OpenH264</string>
-  <string name="assistant_openh264_restart">在使用OpenH264代码前，您必须重启%s</string>
   <string name="assistant_openh264_error">对不起，已出错</string>
   <string name="assistant_codec_downloaded">由Cisco Systems公司提供的OpenH264 Video Code</string>
   <string name="wizard_failed">出错，请重试</string>
   <string name="wizard_server_unavailable">无法连接服务器；请检查您的网络连接</string>
-  <string name="wizard_username_unavailable">此用户名已被占用</string>
-  <string name="assistant_phone_number_unavailable">此电话号码已被使用，请输入不同的号码。如果您想重新使用此号码，您可以删掉您的现有帐户</string>
   <string name="wizard_username_incorrect">有效的用户名</string>
   <string name="assistant_phone_number_incorrect">有效的电话号码</string>
   <string name="wizard_email_incorrect">有效的邮箱</string>
@@ -132,7 +125,6 @@
   <!--In-app-->
   <string name="inapp">应用内</string>
   <string name="inapp_notification_title">内购</string>
-  <string name="inapp_notification_trial_expire">于%s过期</string>
   <string name="inapp_notification_account_expire">订购于%s到期</string>
   <!--Dailer-->
   <string name="address_bar_hint">输入号码或地址</string>
@@ -155,7 +147,6 @@
   <string name="no_chat_history">无对话</string>
   <string name="delete_conversation">您想删除所选对话吗？</string>
   <string name="delete_message">您想删除所选信息吗？</string>
-  <string name="remote_composing">远程编写中</string>
   <string name="share_picture_size_small">小</string>
   <string name="share_picture_size_medium">中</string>
   <string name="share_picture_size_large">大</string>
@@ -165,7 +156,6 @@
   <string name="image_picker_title">选择源</string>
   <string name="image_saved">图片已保存</string>
   <string name="image_not_saved">错误，图片保存失败</string>
-  <string name="wait">请等待...</string>
   <string name="image_transfert_error">文件传输出错</string>
   <string name="message_not_encrypted">此消息未加密</string>
   <string name="message_cant_be_decrypted">您收到了一个加密的消息，但您无法从%s中解密。如果您想要解密之后的消息，需要使用ZRTP密钥。</string>
@@ -175,11 +165,8 @@
   <string name="displayed">读取</string>
   <string name="delivered">已发送</string>
   <string name="resend">重发</string>
+  <string name="add_to_contacts">添加联系人</string>
   <!--Status Bar-->
-  <string name="status_connected">在线</string>
-  <string name="status_not_connected">离线</string>
-  <string name="status_in_progress">正在登录</string>
-  <string name="status_error">登录失败</string>
   <string name="voicemail_unread">未读消息</string>
   <!--Side Menu-->
   <string name="menu_assistant">助手</string>
@@ -209,6 +196,7 @@
   <string name="call_stats_encoder_name">编码器:</string>
   <string name="call_stats_decoder_name">解码器:</string>
   <string name="call">电话</string>
+  <!--Recordings-->
   <!--About-->
   <string name="menu_send_log">发送日志</string>
   <string name="menu_reset_log">清除记录</string>
@@ -235,7 +223,6 @@
   <string name="error_unauthorized">未授权</string>
   <string name="error_io_error">网络错误</string>
   <string name="download_image_failed">下载失败，请检查您的网络连接货稍后再试</string>
-  <string name="remote_provisioning_failure">配置文件下载或获取失败</string>
   <string name="remote_provisioning_again_title">移除配置文件</string>
   <string name="remote_provisioning_again_message">您想更换配置文件URI吗？</string>
   <!--Account Settings-->
@@ -275,7 +262,7 @@
   <string name="default_account_flag">默认账户</string>
   <string name="pref_add_account">添加帐户</string>
   <string name="pref_in_app_store">内购商店</string>
-  <string name="pref_tunnel">Tunnel隧道</string>
+  <string name="pref_tunnel_title">Tunnel隧道</string>
   <string name="pref_tunnel_host">主机名</string>
   <string name="pref_tunnel_port">端口</string>
   <string name="pref_tunnel_mode">模式</string>
@@ -363,6 +350,11 @@
   <!--Audio hack settings-->
   <string name="pref_audio_hacks_title">音频插件</string>
   <string name="pref_audio_use_specific_mode_title">使用特定的模式破解</string>
+  <!--Device specifics-->
+  <string name="device_power_saver_dialog_button_go_to_settings">设置</string>
+  <string name="device_power_saver_dialog_button_later">稍后</string>
+  <!--Debug popup-->
+  <string name="debug_popup_title">诊断</string>
   <!--Content description-->
   <string name="content_description_back">返回</string>
   <string name="content_description_dialer">拨号器</string>
@@ -434,5 +426,4 @@
   <string name="content_description_call_options">通话选项</string>
   <string name="content_description_audio_route">音频路由</string>
   <string name="content_description_exit_conference">退出会话</string>
-  <string name="content_title_notification_service">Linphone服务</string>
 </resources>

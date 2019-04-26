@@ -19,21 +19,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
 public class AuthenticationService extends Service {
 
-	private Authenticator mAuthenticator;
-	@Override
-	public void onCreate() {
-		mAuthenticator = new Authenticator(this);
-	}
+    private Authenticator mAuthenticator;
 
-	@Override
-	public IBinder onBind(Intent intent) {
-		return mAuthenticator.getIBinder();
-	}
+    @Override
+    public void onCreate() {
+        mAuthenticator = new Authenticator(this);
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mAuthenticator.getIBinder();
+    }
 }

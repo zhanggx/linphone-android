@@ -18,16 +18,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-import java.util.ArrayList;
-import java.util.regex.Pattern;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.linphone.LinphonePreferences;
-import org.linphone.mediastream.Log;
-import org.linphone.xmlrpc.XmlRpcHelper;
-import org.linphone.xmlrpc.XmlRpcListenerBase;
-
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -42,12 +32,19 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Patterns;
-
 import com.android.vending.billing.IInAppBillingService;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.linphone.core.tools.Log;
+import org.linphone.settings.LinphonePreferences;
+import org.linphone.xmlrpc.XmlRpcHelper;
+import org.linphone.xmlrpc.XmlRpcListenerBase;
 
-public class InAppPurchaseHelper {
-	public static final int API_VERSION = 3;
-	public static final int ACTIVITY_RESULT_CODE_PURCHASE_ITEM = 11089;
+class InAppPurchaseHelper {
+    public static final int API_VERSION = 3;
+    public static final int ACTIVITY_RESULT_CODE_PURCHASE_ITEM = 11089;
 
     public static final String SKU_DETAILS_ITEM_LIST = "ITEM_ID_LIST";
     public static final String SKU_DETAILS_LIST = "DETAILS_LIST";
@@ -86,283 +83,273 @@ public class InAppPurchaseHelper {
     public static final String PURCHASE_DETAILS_PAYLOAD = "developerPayload";
     public static final String PURCHASE_DETAILS_PURCHASE_TOKEN = "purchaseToken";
 
-    public static final String CLIENT_ERROR_SUBSCRIPTION_PURCHASE_NOT_AVAILABLE = "SUBSCRIPTION_PURCHASE_NOT_AVAILABLE";
-    public static final String CLIENT_ERROR_BIND_TO_BILLING_SERVICE_FAILED = "BIND_TO_BILLING_SERVICE_FAILED";
-    public static final String CLIENT_ERROR_BILLING_SERVICE_UNAVAILABLE = "BILLING_SERVICE_UNAVAILABLE";
+    public static final String CLIENT_ERROR_SUBSCRIPTION_PURCHASE_NOT_AVAILABLE =
+            "SUBSCRIPTION_PURCHASE_NOT_AVAILABLE";
+    public static final String CLIENT_ERROR_BIND_TO_BILLING_SERVICE_FAILED =
+            "BIND_TO_BILLING_SERVICE_FAILED";
+    public static final String CLIENT_ERROR_BILLING_SERVICE_UNAVAILABLE =
+            "BILLING_SERVICE_UNAVAILABLE";
 
-	private Context mContext;
-	private InAppPurchaseListener mListener;
-	private IInAppBillingService mService;
-	private ServiceConnection mServiceConn;
-	private Handler mHandler = new Handler();
-	private String mGmailAccount;
+    private final Context mContext;
+    private final InAppPurchaseListener mListener;
+    private IInAppBillingService mService;
+    private final ServiceConnection mServiceConn;
+    private final Handler mHandler = new Handler();
+    private final String mGmailAccount;
 
-	private String responseCodeToErrorMessage(int responseCode) {
-		switch (responseCode) {
-		case RESULT_USER_CANCELED:
-			return "BILLING_RESPONSE_RESULT_USER_CANCELED";
-		case RESULT_SERVICE_UNAVAILABLE:
-			return "BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE";
-		case RESULT_BILLING_UNAVAILABLE:
-			return "BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE";
-		case RESULT_ITEM_UNAVAILABLE:
-			return "BILLING_RESPONSE_RESULT_ITEM_UNAVAILABLE";
-		case RESULT_DEVELOPER_ERROR:
-			return "BILLING_RESPONSE_RESULT_DEVELOPER_ERROR";
-		case RESULT_ERROR:
-			return "BILLING_RESPONSE_RESULT_ERROR";
-		case RESULT_ITEM_ALREADY_OWNED:
-			return "BILLING_RESPONSE_RESULT_ITEM_ALREADY_OWNED";
-		case RESULT_ITEM_NOT_OWNED:
-			return "BILLING_RESPONSE_RESULT_ITEM_NOT_OWNED";
-		}
-		return "UNKNOWN_RESPONSE_CODE";
-	}
+    public InAppPurchaseHelper(Activity context, InAppPurchaseListener listener) {
+        mContext = context;
+        mListener = listener;
+        mGmailAccount = getGmailAccount();
 
-	public InAppPurchaseHelper(Activity context, InAppPurchaseListener listener) {
-		mContext = context;
-		mListener = listener;
-		mGmailAccount = getGmailAccount();
+        Log.d(
+                "[In-app purchase] creating InAppPurchaseHelper for context "
+                        + context.getLocalClassName());
 
+        mServiceConn =
+                new ServiceConnection() {
+                    @Override
+                    public void onServiceDisconnected(ComponentName name) {
+                        Log.d("[In-app purchase] onServiceDisconnected!");
+                        mService = null;
+                    }
 
-		Log.d("[In-app purchase] creating InAppPurchaseHelper for context "+context.getLocalClassName());
+                    @Override
+                    public void onServiceConnected(ComponentName name, IBinder service) {
+                        Log.d("[In-app purchase] onServiceConnected!");
+                        mService = IInAppBillingService.Stub.asInterface(service);
+                        String packageName = mContext.getPackageName();
+                        try {
+                            int response =
+                                    mService.isBillingSupported(
+                                            API_VERSION, packageName, ITEM_TYPE_SUBS);
+                            if (response != RESPONSE_RESULT_OK || mGmailAccount == null) {
+                                Log.e("[In-app purchase] Error: Subscriptions aren't supported!");
+                                mListener.onError(CLIENT_ERROR_SUBSCRIPTION_PURCHASE_NOT_AVAILABLE);
+                            } else {
+                                mListener.onServiceAvailableForQueries();
+                            }
+                        } catch (RemoteException e) {
+                            Log.e(e);
+                        }
+                    }
+                };
 
-		mServiceConn = new ServiceConnection() {
-		   @Override
-		   public void onServiceDisconnected(ComponentName name) {
-			   Log.d("[In-app purchase] onServiceDisconnected!");
-		       mService = null;
-		   }
-
-		   @Override
-		   public void onServiceConnected(ComponentName name, IBinder service) {
-			   Log.d("[In-app purchase] onServiceConnected!");
-			   mService = IInAppBillingService.Stub.asInterface(service);
-		       String packageName = mContext.getPackageName();
-		       try {
-		    	   int response = mService.isBillingSupported(API_VERSION, packageName, ITEM_TYPE_SUBS);
-		    	   if (response != RESPONSE_RESULT_OK || mGmailAccount == null) {
-		    		   Log.e("[In-app purchase] Error: Subscriptions aren't supported!");
-		    		   mListener.onError(CLIENT_ERROR_SUBSCRIPTION_PURCHASE_NOT_AVAILABLE);
-		    	   } else {
-				       mListener.onServiceAvailableForQueries();
-		    	   }
-		       } catch (RemoteException e) {
-		    	   Log.e(e);
-		       }
-		   }
-		};
-
-		Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
-		serviceIntent.setPackage("com.android.vending");
+        Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
+        serviceIntent.setPackage("com.android.vending");
         if (!mContext.getPackageManager().queryIntentServices(serviceIntent, 0).isEmpty()) {
-            boolean ok = mContext.bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+            boolean ok =
+                    mContext.bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
             if (!ok) {
-            	Log.e("[In-app purchase] Error: Bind service failed");
-    		   mListener.onError(CLIENT_ERROR_BIND_TO_BILLING_SERVICE_FAILED);
+                Log.e("[In-app purchase] Error: Bind service failed");
+                mListener.onError(CLIENT_ERROR_BIND_TO_BILLING_SERVICE_FAILED);
             }
         } else {
-        	Log.e("[In-app purchase] Error: Billing service unavailable on device.");
-    		mListener.onError(CLIENT_ERROR_BILLING_SERVICE_UNAVAILABLE);
+            Log.e("[In-app purchase] Error: Billing service unavailable on device.");
+            mListener.onError(CLIENT_ERROR_BILLING_SERVICE_UNAVAILABLE);
         }
-	}
+    }
 
-	private ArrayList<Purchasable> getAvailableItemsForPurchase() {
-		ArrayList<Purchasable> products = new ArrayList<Purchasable>();
-		ArrayList<String> skuList = LinphonePreferences.instance().getInAppPurchasables();
-		Bundle querySkus = new Bundle();
-		querySkus.putStringArrayList(SKU_DETAILS_ITEM_LIST, skuList);
+    private String responseCodeToErrorMessage(int responseCode) {
+        switch (responseCode) {
+            case RESULT_USER_CANCELED:
+                return "BILLING_RESPONSE_RESULT_USER_CANCELED";
+            case RESULT_SERVICE_UNAVAILABLE:
+                return "BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE";
+            case RESULT_BILLING_UNAVAILABLE:
+                return "BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE";
+            case RESULT_ITEM_UNAVAILABLE:
+                return "BILLING_RESPONSE_RESULT_ITEM_UNAVAILABLE";
+            case RESULT_DEVELOPER_ERROR:
+                return "BILLING_RESPONSE_RESULT_DEVELOPER_ERROR";
+            case RESULT_ERROR:
+                return "BILLING_RESPONSE_RESULT_ERROR";
+            case RESULT_ITEM_ALREADY_OWNED:
+                return "BILLING_RESPONSE_RESULT_ITEM_ALREADY_OWNED";
+            case RESULT_ITEM_NOT_OWNED:
+                return "BILLING_RESPONSE_RESULT_ITEM_NOT_OWNED";
+        }
+        return "UNKNOWN_RESPONSE_CODE";
+    }
 
-		Bundle skuDetails = null;
-		try {
-			skuDetails = mService.getSkuDetails(API_VERSION, mContext.getPackageName(), ITEM_TYPE_SUBS, querySkus);
-		} catch (RemoteException e) {
-			Log.e(e);
-		}
+    private ArrayList<Purchasable> getAvailableItemsForPurchase() {
+        ArrayList<Purchasable> products = new ArrayList<>();
+        ArrayList<String> skuList = LinphonePreferences.instance().getInAppPurchasables();
+        Bundle querySkus = new Bundle();
+        querySkus.putStringArrayList(SKU_DETAILS_ITEM_LIST, skuList);
 
-		if (skuDetails != null) {
-			int response = skuDetails.getInt(RESPONSE_CODE);
-			if (response == RESPONSE_RESULT_OK) {
-				ArrayList<String> responseList = skuDetails.getStringArrayList(SKU_DETAILS_LIST);
-				for (String thisResponse : responseList) {
-					try {
-						JSONObject object = new JSONObject(thisResponse);
-						String id = object.getString(SKU_DETAILS_PRODUCT_ID);
-						String price = object.getString(SKU_DETAILS_PRICE);
-						String title = object.getString(SKU_DETAILS_TITLE);
-						String desc = object.getString(SKU_DETAILS_DESC);
+        Bundle skuDetails = null;
+        try {
+            skuDetails =
+                    mService.getSkuDetails(
+                            API_VERSION, mContext.getPackageName(), ITEM_TYPE_SUBS, querySkus);
+        } catch (RemoteException e) {
+            Log.e(e);
+        }
 
-						Purchasable purchasable = new Purchasable(id).setTitle(title).setDescription(desc).setPrice(price);
-						Log.w("Purchasable item " + purchasable.getDescription());
-						products.add(purchasable);
-					} catch (JSONException e) {
-						Log.e(e);
-					}
-				}
-			} else {
-				Log.e("[In-app purchase] Error: responde code is not ok: " + responseCodeToErrorMessage(response));
-	    		mListener.onError(responseCodeToErrorMessage(response));
-			}
-		}
+        if (skuDetails != null) {
+            int response = skuDetails.getInt(RESPONSE_CODE);
+            if (response == RESPONSE_RESULT_OK) {
+                ArrayList<String> responseList = skuDetails.getStringArrayList(SKU_DETAILS_LIST);
+                for (String thisResponse : responseList) {
+                    try {
+                        JSONObject object = new JSONObject(thisResponse);
+                        String id = object.getString(SKU_DETAILS_PRODUCT_ID);
+                        String price = object.getString(SKU_DETAILS_PRICE);
+                        String title = object.getString(SKU_DETAILS_TITLE);
+                        String desc = object.getString(SKU_DETAILS_DESC);
 
-		return products;
-	}
-
-	public void getAvailableItemsForPurchaseAsync() {
-		new Thread(new Runnable() {
-            public void run() {
-            	final ArrayList<Purchasable> items = getAvailableItemsForPurchase();
-            	if (mHandler != null && mListener != null) {
-            		mHandler.post(new Runnable() {
-                        public void run() {
-                        	mListener.onAvailableItemsForPurchaseQueryFinished(items);
-                        }
-                    });
-            	}
+                        Purchasable purchasable =
+                                new Purchasable(id)
+                                        .setTitle(title)
+                                        .setDescription(desc)
+                                        .setPrice(price);
+                        Log.w("Purchasable item " + purchasable.getDescription());
+                        products.add(purchasable);
+                    } catch (JSONException e) {
+                        Log.e(e);
+                    }
+                }
+            } else {
+                Log.e(
+                        "[In-app purchase] Error: responde code is not ok: "
+                                + responseCodeToErrorMessage(response));
+                mListener.onError(responseCodeToErrorMessage(response));
             }
-		}).start();
-	}
+        }
 
-	public void getPurchasedItemsAsync() {
-		new Thread(new Runnable() {
-            public void run() {
+        return products;
+    }
 
-            	final ArrayList<Purchasable> items = new ArrayList<Purchasable>();
-            	String continuationToken = null;
-        		do {
-        			Bundle purchasedItems = null;
-        			try {
-        				purchasedItems = mService.getPurchases(API_VERSION, mContext.getPackageName(), ITEM_TYPE_SUBS, continuationToken);
-        			} catch (RemoteException e) {
-        				Log.e(e);
-        			}
+    public void getAvailableItemsForPurchaseAsync() {
+        new Thread(
+                        new Runnable() {
+                            public void run() {
+                                final ArrayList<Purchasable> items = getAvailableItemsForPurchase();
+                                if (mHandler != null && mListener != null) {
+                                    mHandler.post(
+                                            new Runnable() {
+                                                public void run() {
+                                                    mListener
+                                                            .onAvailableItemsForPurchaseQueryFinished(
+                                                                    items);
+                                                }
+                                            });
+                                }
+                            }
+                        })
+                .start();
+    }
 
-        			if (purchasedItems != null) {
-        				int response = purchasedItems.getInt(RESPONSE_CODE);
-        				if (response == RESPONSE_RESULT_OK) {
-        					ArrayList<String>  purchaseDataList = purchasedItems.getStringArrayList(RESPONSE_INAPP_PURCHASE_DATA_LIST);
-        					ArrayList<String>  signatureList = purchasedItems.getStringArrayList(RESPONSE_INAPP_SIGNATURE_LIST);
-        					continuationToken = purchasedItems.getString(RESPONSE_INAPP_CONTINUATION_TOKEN);
+    public void parseAndVerifyPurchaseItemResultAsync(
+            int requestCode, int resultCode, Intent data) {
+        if (requestCode == ACTIVITY_RESULT_CODE_PURCHASE_ITEM) {
+            int responseCode = data.getIntExtra(RESPONSE_CODE, 0);
 
-				   			for (int i = 0; i < purchaseDataList.size(); ++i) {
-				   				String purchaseData = purchaseDataList.get(i);
-    				   			String signature = signatureList.get(i);
-    							Log.d("[In-app purchase] " + purchaseData);
+            if (resultCode == Activity.RESULT_OK && responseCode == RESPONSE_RESULT_OK) {
+                String payload = data.getStringExtra(RESPONSE_INAPP_PURCHASE_DATA);
+                String signature = data.getStringExtra(RESPONSE_INAPP_SIGNATURE);
 
-    				   			Purchasable item = verifySignature(purchaseData, signature);
-    				   			if (item != null) {
-    				   				items.add(item);
-    				   			}
-    				   		}
-        				} else {
-        					Log.e("[In-app purchase] Error: responde code is not ok: " + responseCodeToErrorMessage(response));
-        		    		mListener.onError(responseCodeToErrorMessage(response));
-        				}
-        			}
-        		} while (continuationToken != null);
+                Purchasable item = LinphonePreferences.instance().getInAppPurchasedItem();
+                item.setPayloadAndSignature(payload, signature);
+                LinphonePreferences.instance().setInAppPurchasedItem(item);
 
-            	if (mHandler != null && mListener != null) {
-            		mHandler.post(new Runnable() {
-                        public void run() {
-                        	mListener.onPurchasedItemsQueryFinished(items);
-                        }
-                    });
-            	}
+                XmlRpcHelper xmlRpcHelper = new XmlRpcHelper();
+                xmlRpcHelper.verifySignatureAsync(
+                        new XmlRpcListenerBase() {
+                            @Override
+                            public void onSignatureVerified(boolean success) {
+                                mListener.onPurchasedItemConfirmationQueryFinished(success);
+                            }
+                        },
+                        payload,
+                        signature);
             }
-		}).start();
-	}
+        }
+    }
 
-	public void parseAndVerifyPurchaseItemResultAsync(int requestCode, int resultCode, Intent data) {
-		if (requestCode == ACTIVITY_RESULT_CODE_PURCHASE_ITEM) {
-			int responseCode = data.getIntExtra(RESPONSE_CODE, 0);
+    private void purchaseItem(String productId, String sipIdentity) {
+        Bundle buyIntentBundle = null;
+        try {
+            buyIntentBundle =
+                    mService.getBuyIntent(
+                            API_VERSION,
+                            mContext.getPackageName(),
+                            productId,
+                            ITEM_TYPE_SUBS,
+                            sipIdentity);
+        } catch (RemoteException e) {
+            Log.e(e);
+        }
 
-			if (resultCode == Activity.RESULT_OK && responseCode == RESPONSE_RESULT_OK) {
-				String payload = data.getStringExtra(RESPONSE_INAPP_PURCHASE_DATA);
-				String signature = data.getStringExtra(RESPONSE_INAPP_SIGNATURE);
-
-				Purchasable item = LinphonePreferences.instance().getInAppPurchasedItem();
-				item.setPayloadAndSignature(payload, signature);
-				LinphonePreferences.instance().setInAppPurchasedItem(item);
-
-				XmlRpcHelper xmlRpcHelper = new XmlRpcHelper();
-				xmlRpcHelper.verifySignatureAsync(new XmlRpcListenerBase() {
-					@Override
-					public void onSignatureVerified(boolean success) {
-						mListener.onPurchasedItemConfirmationQueryFinished(success);
-					}
-				}, payload, signature);
-			}
-		}
-	}
-
-	private void purchaseItem(String productId, String sipIdentity) {
-		Bundle buyIntentBundle = null;
-		try {
-			buyIntentBundle = mService.getBuyIntent(API_VERSION, mContext.getPackageName(), productId, ITEM_TYPE_SUBS, sipIdentity);
-		} catch (RemoteException e) {
-			Log.e(e);
-		}
-
-		if (buyIntentBundle != null) {
-			PendingIntent pendingIntent = buyIntentBundle.getParcelable(RESPONSE_BUY_INTENT);
-			if (pendingIntent != null) {
-				try {
-					((Activity) mContext).startIntentSenderForResult(pendingIntent.getIntentSender(), ACTIVITY_RESULT_CODE_PURCHASE_ITEM, new Intent(), 0, 0, 0);
-				} catch (SendIntentException e) {
-					Log.e(e);
-				}
-			}
-		}
-	}
-
-	public void purchaseItemAsync(final String productId, final String sipIdentity) {
-		new Thread(new Runnable() {
-            public void run() {
-            	purchaseItem(productId, sipIdentity);
+        if (buyIntentBundle != null) {
+            PendingIntent pendingIntent = buyIntentBundle.getParcelable(RESPONSE_BUY_INTENT);
+            if (pendingIntent != null) {
+                try {
+                    ((Activity) mContext)
+                            .startIntentSenderForResult(
+                                    pendingIntent.getIntentSender(),
+                                    ACTIVITY_RESULT_CODE_PURCHASE_ITEM,
+                                    new Intent(),
+                                    0,
+                                    0,
+                                    0);
+                } catch (SendIntentException e) {
+                    Log.e(e);
+                }
             }
-		}).start();
-	}
+        }
+    }
 
-	public void destroy() {
-		mContext.unbindService(mServiceConn);
-	}
+    public void purchaseItemAsync(final String productId, final String sipIdentity) {
+        new Thread(
+                        new Runnable() {
+                            public void run() {
+                                purchaseItem(productId, sipIdentity);
+                            }
+                        })
+                .start();
+    }
 
-	public String getGmailAccount() {
-		Account[] accounts = AccountManager.get(mContext).getAccountsByType("com.google");
+    public void destroy() {
+        mContext.unbindService(mServiceConn);
+    }
 
-	    for (Account account: accounts) {
-	    	if (isEmailCorrect(account.name)) {
-	            String possibleEmail = account.name;
-	            return possibleEmail;
-	        }
-	    }
+    public String getGmailAccount() {
+        Account[] accounts = AccountManager.get(mContext).getAccountsByType("com.google");
 
-	    return null;
-	}
+        for (Account account : accounts) {
+            if (isEmailCorrect(account.name)) {
+                return account.name;
+            }
+        }
 
-	private boolean isEmailCorrect(String email) {
-    	Pattern emailPattern = Patterns.EMAIL_ADDRESS;
-    	return emailPattern.matcher(email).matches();
-	}
+        return null;
+    }
 
-	private Purchasable verifySignature(String payload, String signature) {
-		// TODO FIXME rework to be async
-		/*XmlRpcHelper helper = new XmlRpcHelper();
-		if (helper.verifySignature(payload, signature)) {
-			try {
-				JSONObject json = new JSONObject(payload);
-				String productId = json.getString(PURCHASE_DETAILS_PRODUCT_ID);
-				Purchasable item = new Purchasable(productId);
-				item.setPayloadAndSignature(payload, signature);
-				return item;
-			} catch (JSONException e) {
-				Log.e(e);
-			}
-		}*/
-		return null;
-	}
+    private boolean isEmailCorrect(String email) {
+        Pattern emailPattern = Patterns.EMAIL_ADDRESS;
+        return emailPattern.matcher(email).matches();
+    }
 
-	interface VerifiedSignatureListener {
-		void onParsedAndVerifiedSignatureQueryFinished(Purchasable item);
-	}
+    private Purchasable verifySignature() {
+        // TODO FIXME rework to be async
+        /*XmlRpcHelper helper = new XmlRpcHelper();
+        if (helper.verifySignature(payload, signature)) {
+        	try {
+        		JSONObject json = new JSONObject(payload);
+        		String productId = json.getString(PURCHASE_DETAILS_PRODUCT_ID);
+        		Purchasable item = new Purchasable(productId);
+        		item.setPayloadAndSignature(payload, signature);
+        		return item;
+        	} catch (JSONException e) {
+        		Log.e(e);
+        	}
+        }*/
+        return null;
+    }
+
+    interface VerifiedSignatureListener {
+        void onParsedAndVerifiedSignatureQueryFinished(Purchasable item);
+    }
 }

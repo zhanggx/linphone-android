@@ -18,11 +18,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
-import org.linphone.LinphoneManager;
-import org.linphone.LinphonePreferences;
-import org.linphone.R;
-
 import android.app.Fragment;
 import android.os.Bundle;
 import android.text.Editable;
@@ -33,50 +28,58 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import org.linphone.LinphoneManager;
+import org.linphone.R;
+import org.linphone.settings.LinphonePreferences;
 
-public class RemoteProvisioningFragment extends Fragment implements OnClickListener, TextWatcher{
-	private EditText remoteProvisioningUrl;
-	private Button apply;
+public class RemoteProvisioningFragment extends Fragment implements OnClickListener, TextWatcher {
+    private EditText mRemoteProvisioningUrl;
+    private Button mApply, mQrcode;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.assistant_remote_provisioning, container, false);
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.assistant_remote_provisioning, container, false);
 
-		remoteProvisioningUrl = (EditText) view.findViewById(R.id.assistant_remote_provisioning_url);
-		remoteProvisioningUrl.addTextChangedListener(this);
-		apply = (Button) view.findViewById(R.id.assistant_apply);
-		apply.setEnabled(false);
-		apply.setOnClickListener(this);
+        mRemoteProvisioningUrl = view.findViewById(R.id.assistant_remote_provisioning_url);
+        mRemoteProvisioningUrl.addTextChangedListener(this);
+        mQrcode = view.findViewById(R.id.assistant_qrcode);
+        mQrcode.setOnClickListener(this);
+        mApply = view.findViewById(R.id.assistant_apply);
+        mApply.setEnabled(false);
+        mApply.setOnClickListener(this);
 
-		return view;
-	}
+        if (getArguments() != null && !getArguments().getString("RemoteUrl").isEmpty()) {
+            mRemoteProvisioningUrl.setText(getArguments().getString("RemoteUrl"));
+        }
 
-	@Override
-	public void onClick(View v) {
-		int id = v.getId();
+        return view;
+    }
 
-		if (id == R.id.assistant_apply) {
-			String url = remoteProvisioningUrl.getText().toString();
-			AssistantActivity.instance().displayRemoteProvisioningInProgressDialog();
-			LinphonePreferences.instance().setRemoteProvisioningUrl(url);
-			LinphoneManager.getInstance().restartLinphoneCore();
-			AssistantActivity.instance().setLinphoneCoreListener();
-		}
-	}
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
 
-	@Override
-	public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        if (id == R.id.assistant_apply) {
+            String url = mRemoteProvisioningUrl.getText().toString();
+            AssistantActivity.instance().displayRemoteProvisioningInProgressDialog();
+            LinphonePreferences.instance().setRemoteProvisioningUrl(url);
+            LinphoneManager.getLc().getConfig().sync();
+            LinphoneManager.getInstance().restartCore();
+            AssistantActivity.instance().setCoreListener();
+        } else if (id == R.id.assistant_qrcode) {
+            AssistantActivity.instance().displayQRCodeReader();
+        }
+    }
 
-	}
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-	@Override
-	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		apply.setEnabled(!remoteProvisioningUrl.getText().toString().isEmpty());
-	}
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        mApply.setEnabled(!mRemoteProvisioningUrl.getText().toString().isEmpty());
+    }
 
-	@Override
-	public void afterTextChanged(Editable s) {
-
-	}
+    @Override
+    public void afterTextChanged(Editable s) {}
 }

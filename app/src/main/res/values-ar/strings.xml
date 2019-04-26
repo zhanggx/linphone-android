@@ -6,16 +6,14 @@
   <string name="addressbook_label">لِنْفُونْ</string>
   <string name="notification_title">لِنْفُونْ</string>
   <string name="wait_dialog_text">يجري التشغيل</string>
-  <string name="notification_registered">‫%s مُسجَّل‬</string>
-  <string name="notification_register_failure">‫فشل %s في التسجيل‬</string>
   <string name="tunnel_host"></string>
   <string name="about_version">لِنْفُونْ أندرويد %s</string>
   <string name="about_liblinphone_version">Linphone Core %s</string>
-  <string name="about_text">رخصة جْنُو العمومية الإصدار \n© 2010-2017 Belledonne Communications</string>
-  <string name="about_link">www.linphone.org</string>
   <string name="sync_account_name">جهات اتصال لِنْفُونْ</string>
+  <!--Notifications-->
   <!--Common-->
   <string name="username">اسم المستخدم</string>
+  <string name="userid">معرِّف المستخدم (اختياري)</string>
   <string name="phone_number">رقم الهاتف</string>
   <string name="display_name">الاسم المعروض</string>
   <string name="password">كلمة السر</string>
@@ -41,7 +39,6 @@
   <string name="decline">رفض</string>
   <string name="conference">اجتماع</string>
   <string name="link">الرابط</string>
-  <string name="link_account_popup">أتريد ربط الحساب %s برقم هاتفك ؟</string>
   <string name="maybe_later">ربما لاحقا</string>
   <string name="later">لاحقا</string>
   <string name="no">لا</string>
@@ -88,13 +85,10 @@
   <string name="assistant_codec_down_question">أأنت موافق على تنزيل مرماز الفيديو OpenH264 المُقدَّم من طرف شركة Cisco Systems, Inc. ؟</string>
   <string name="assistant_codec_downloading">يجري تنزيل مرماز الفيديو OpenH264 المُقدَّم من طرف شركة Cisco Systems, Inc.</string>
   <string name="assistant_openh264_downloading">يجري تنزيل OpenH264</string>
-  <string name="assistant_openh264_restart">قبل تشغيل مرماز OpenH264 يجب عليك إعادة تشغيل %s.</string>
   <string name="assistant_openh264_error">عذرا، حدث خطأ ما.</string>
   <string name="assistant_codec_downloaded">انتهى تنزيل مرماز الفيديو OpenH264 المُقدَّم من طرف شركة Cisco Systems, Inc.</string>
   <string name="wizard_failed">حدث خطأ، حاول لاحقا.</string>
   <string name="wizard_server_unavailable">انعدام الوصول للخادم، تأكد من اتصالك بالشبكة.</string>
-  <string name="wizard_username_unavailable">إن إسم المستخدم هذا مُستعمَل.</string>
-  <string name="assistant_phone_number_unavailable">رقم الهاتف هذا مستخدَم مسبقا.\r\nيُرجى إدخال رقم آخر.\r\nيمكنك حذف الحساب الحالي إن شئت إعادة استخدام رقم هاتفك.</string>
   <string name="wizard_username_incorrect">اسم المستخدم غير صحيح.</string>
   <string name="assistant_phone_number_incorrect">رقم هاتفك غير صحيح.</string>
   <string name="wizard_email_incorrect">عنوانك الإلكتروني غير صحيح.</string>
@@ -110,6 +104,7 @@
   <string name="use_email_for_validation">استخدم عنوان البريد الإلكتروني لتأكيد الحساب</string>
   <string name="login_with_username">استعمل اسم المستخدم وكلمة السر عوضا عن رقم هاتفك</string>
   <string name="phone_number_info_title">لأي غرض سيجري استخدام رقم هاتفي ؟</string>
+  <string name="phone_number_info_content">\nبفضل رقم هاتفك، يستطيع أصدقاؤك العثور عليك بسهولة.\n\nسوف ترى في دفتر عناوينك من يستخدم لِنْفُونْ كما سيتمكن أصدقاؤك كذلك من الوصول إليك عبر لِنْفُونْ.\n</string>
   <string name="phone_number_link_info_content">
 \nسيجدك أصدقاؤك بسهولة إن ربطت حسابك برقم هاتفك\\n\nسوف تجد في دفتر عناوينك من يستخدم لِنْفُونْ وسيتمكن أصدقاؤك من الوصول إليك بواسطة لِنْفُونْ كذلك.لِنْفُونْ.\n</string>
   <string name="phone_number_link_info_content_already_account">يمكنك استخدام رقم هاتفي واحد مع حساب لنفون واحد.\n\nإن ربطت رقم هاتفك مع حساب آخر لكنك تود استخدام هذا الحساب، يمكنك ببساطة ربطه مع رقم هاتفك تلقائيا وسيُنقَل هذا الأخير إلى هذا الحساب.</string>
@@ -135,7 +130,6 @@
   <!--In-app-->
   <string name="inapp">التبضع المحمول</string>
   <string name="inapp_notification_title">شراء بالتبضع محمول</string>
-  <string name="inapp_notification_trial_expire">ستنتهي الفترة التجريبية بتاريخ %s</string>
   <string name="inapp_notification_account_expire">سوف تنتهي صلاحية الاشتراك في %s</string>
   <!--Dailer-->
   <string name="address_bar_hint">أدخل رقما أو عنوانا</string>
@@ -158,7 +152,6 @@
   <string name="no_chat_history">لا وجود لأي محادثة</string>
   <string name="delete_conversation">أتود حذف المحادثات المحددة ؟</string>
   <string name="delete_message">أتود حذف الرسالة المحددة ؟</string>
-  <string name="remote_composing">المُراسِل يكتب...</string>
   <string name="share_picture_size_small">صغيرة</string>
   <string name="share_picture_size_medium">متوسطة</string>
   <string name="share_picture_size_large">كبيرة</string>
@@ -168,7 +161,6 @@
   <string name="image_picker_title">اختر المصدر</string>
   <string name="image_saved">حُفظَت الصورة</string>
   <string name="image_not_saved">خطأ، لم تُحفَظ الصورة</string>
-  <string name="wait">يُرجى الانتظار...</string>
   <string name="image_transfert_error">حدث خطأ أثناء نقل الملف</string>
   <string name="message_not_encrypted">إن الرسالة ليست مُعمَّاة</string>
   <string name="message_cant_be_decrypted">لقد استلمت رسالة مُعمَّاة لم تتمكن من فك تعميتها من  %s\nيجب عليك الاتصال بمخاطبك لتبادل مفاتيح ZRTP إذا أردت فك تعمية الرسائل اللاحقة التي ستستلمها.</string>
@@ -178,11 +170,9 @@
   <string name="displayed">قُرِأ</string>
   <string name="delivered">سُلِّم</string>
   <string name="resend">أعد اﻹرسال</string>
+  <string name="add_to_contacts">إضافة إلى جهات الاتصال</string>
+  <string name="download_file">تنزيل</string>
   <!--Status Bar-->
-  <string name="status_connected">مُسجَّل</string>
-  <string name="status_not_connected">غير مُسجَّل</string>
-  <string name="status_in_progress">يجري التسجيل</string>
-  <string name="status_error">فشِل التسجيل</string>
   <string name="voicemail_unread">الرسائل غير المقروءة</string>
   <!--Side Menu-->
   <string name="menu_assistant">المرشد</string>
@@ -196,8 +186,6 @@
   <string name="no_current_call">لا وجود لأي مكالمة نشيطة</string>
   <string name="call_paused_by_remote">أوقف مخاطبك المكالمة مؤقتا </string>
   <string name="couldnt_accept_call">حدث خطأ خلال قبول المكالمة</string>
-  <string name="zrtp_dialog1">أكد رمز الاستيثاق مع نظيرك :\nقل : %s</string>
-  <string name="zrtp_dialog2">\nمخاطبك يجب أن يقول : %s</string>
   <string name="zrtp_notification_title">رمز الاستيثاق</string>
   <string name="zrtp_notification_message">قم بتأكيد رمز الاستيثاق السابق مع مخاطبك</string>
   <string name="unknown_incoming_call_name">مجهول</string>
@@ -207,15 +195,19 @@
   <string name="call_stats_ip">صنف IP :</string>
   <string name="call_stats_upload">صبيب الرفع :</string>
   <string name="call_stats_download">صبيب التنزيل :</string>
+  <string name="call_stats_estimated_download">تقدير صبيب التنزيل :</string>
   <string name="call_stats_ice">توصيل ICE :</string>
   <string name="call_stats_video_resolution_sent">دقة الفيديو المُرسَل :</string>
   <string name="call_stats_video_resolution_received">دقة الفيديو المُستلَم :</string>
+  <string name="call_stats_video_fps_sent">معدل عرض الفيديو المُرسَل :</string>
+  <string name="call_stats_video_fps_received">معدل عرض الفيديو المُستلَم : </string>
   <string name="call_stats_sender_loss_rate">معدل ضياع المُرسِل :</string>
   <string name="call_stats_receiver_loss_rate">معدل ضياع المتلقي :</string>
   <string name="call_stats_jitter_buffer">صِوان الارتعاش :</string>
   <string name="call_stats_encoder_name">مُرمِّز :</string>
   <string name="call_stats_decoder_name">مفك الترميز :</string>
   <string name="call">المكالمة</string>
+  <!--Recordings-->
   <!--About-->
   <string name="menu_send_log">إرسال السجل</string>
   <string name="menu_reset_log">إعادة تعيين السجل</string>
@@ -242,7 +234,6 @@
   <string name="error_unauthorized">غير مُصرَّح</string>
   <string name="error_io_error">خطأ في الشبكة</string>
   <string name="download_image_failed">فشل التنزيل. يُرجى التحقق من اتصالك بالشبكة أو الإعادة لاحقا.</string>
-  <string name="remote_provisioning_failure">فشِل تنزيل أو تطبيق تشكيلة التهيئة عن بعد</string>
   <string name="remote_provisioning_again_title">التهيئة عن بعد</string>
   <string name="remote_provisioning_again_message">أتود تغيير عنوان التهئية البعيدة ؟</string>
   <!--Account Settings-->
@@ -282,7 +273,7 @@
   <string name="default_account_flag">الحساب الافتراضي</string>
   <string name="pref_add_account">إضافة حساب</string>
   <string name="pref_in_app_store">متجر التبضع المحمول</string>
-  <string name="pref_tunnel">النفق</string>
+  <string name="pref_tunnel_title">النفق</string>
   <string name="pref_tunnel_host">إسم المضيف</string>
   <string name="pref_tunnel_port">المنفذ</string>
   <string name="pref_tunnel_mode">الوضع</string>
@@ -327,10 +318,8 @@
   <string name="pref_call_title">المكالمة</string>
   <string name="pref_device_ringtone">استخدم رنة الجهاز</string>
   <string name="pref_auto_answer">رد تلقائيا على المكالمات الواردة</string>
-  <string name="pref_auto_answer_time">مهلة التشغيل التلقائي (بالميلي-ثواني)</string>
-  <string name="pref_rfc2833_dtmf">أرسل DTMF مع التدفق (RFC2833)</string>
-  <string name="pref_sipinfo_dtmf">أرسل DTMF خارج التدفق (SIP INFO)</string>
   <string name="pref_voice_mail">عنوان العلبة الصوتية</string>
+  <string name="pref_dialer_call">استخدمْ لِنْفُونْ كتطبيق هاتفك الافتراضي</string>
   <!--Chat settings-->
   <string name="pref_chat_title">المحادثة</string>
   <string name="pref_image_sharing_server_title">خادم المشاركة</string>
@@ -380,6 +369,11 @@
   <string name="pref_audio_use_specific_mode_summary">0=MODE_NORMAL (افتراضي)، 2=MODE_IN_CALL</string>
   <string name="pref_audio_hacks_use_routing_api_title">استخدم تطويعات API التوجيه</string>
   <string name="pref_audio_hacks_use_galaxys_hack_title">استخدم تطويعات الصوت لـ Galaxy S</string>
+  <!--Device specifics-->
+  <string name="device_power_saver_dialog_button_go_to_settings">اﻹعدادات</string>
+  <string name="device_power_saver_dialog_button_later">لاحقا</string>
+  <!--Debug popup-->
+  <string name="debug_popup_title">التنقيح</string>
   <!--Content description-->
   <string name="content_description_back">الرجوع</string>
   <string name="content_description_dialer">لوحة المفاتيح</string>
@@ -452,6 +446,4 @@
   <string name="content_description_call_options">خيارات المكالمة</string>
   <string name="content_description_audio_route">توجيه الصوت</string>
   <string name="content_description_exit_conference">مغادرة الاجتماع</string>
-  <string name="content_title_notification_service">خدمة لِنْفُونْ</string>
-  <string name="content_title_notification">إشعارات لِنْفُونْ</string>
 </resources>

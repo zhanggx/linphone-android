@@ -6,14 +6,11 @@
   <string name="addressbook_label">Linphone</string>
   <string name="notification_title">Linphone</string>
   <string name="wait_dialog_text">მიმდინარეობს გაშვება</string>
-  <string name="notification_registered">%s დარეგისტრირებულია</string>
-  <string name="notification_register_failure">%s-ის დარეგისტრირება ვერ მოხერხდა</string>
   <string name="tunnel_host"></string>
   <string name="about_version">Linphone Android %s</string>
   <string name="about_liblinphone_version">Linphone ბირთვი %s</string>
-  <string name="about_text">GNU ზოგადი საჯარო ლიცენზია V2\n © 2010-2017 Belledonne Communications</string>
-  <string name="about_link">www.linphone.org</string>
   <string name="sync_account_name">linphone კონტაქტები</string>
+  <!--Notifications-->
   <!--Common-->
   <string name="username">მომხმარებლის სახელი</string>
   <string name="userid">User-id (არასავალდებულო)</string>
@@ -29,6 +26,7 @@
   <string name="retry">თავიდან სცდა</string>
   <string name="cancel">გაუქმება</string>
   <string name="accept">მიღება</string>
+  <string name="open">გახსნა</string>
   <string name="continue_text">გაგრძელება</string>
   <string name="about">შესახებ</string>
   <string name="deny">უარყოფა</string>
@@ -42,13 +40,13 @@
   <string name="decline">უარყოფა</string>
   <string name="conference">კონფერენცია</string>
   <string name="link">ბმული</string>
-  <string name="link_account_popup">გსურთ ანგარიშის %s მიბმა თქვენს ტელეფონის ნომერზე?</string>
   <string name="maybe_later">შესაძლოა მოგვიანებით</string>
   <string name="later">მოგვიანებით</string>
   <string name="no">არა</string>
   <string name="ok">OK</string>
   <string name="yes">დიახ</string>
   <string name="link_account">ანგარიშის მიბმა</string>
+  <string name="update_available">ხელმისაწვდომია განახლება</string>
   <!--Launch screen-->
   <string name="app_description"><i>თავისუფალი</i> SIP კლიენტი</string>
   <!--Assistant-->
@@ -89,13 +87,10 @@
   <string name="assistant_codec_down_question">ეთანხმებით Cisco Systems, Inc. მოერ მოწოდებული OpenH264 ვიდეო კოდეკის გადმოწერას?</string>
   <string name="assistant_codec_downloading">მიმდინარეობს Cisco Systems, Inc. მიერ მოწოდებული OpenH264 ვიდეო კოდეკის გადმოწერა</string>
   <string name="assistant_openh264_downloading">მიმდინარეობს OpenH264-ს გადმოწერა</string>
-  <string name="assistant_openh264_restart">სანამ შეძლებთ OpenH264 კოდეკის გამოყენებას უნდა გადატვირთოთ %s.</string>
   <string name="assistant_openh264_error">ბოდიში, მოხდა შეცდომა.</string>
   <string name="assistant_codec_downloaded">Cisco Systems, Inc. მიერ მოწოდებული OpenH264 ვიდეო კოდეკის იქნა გადმოწერილი.</string>
   <string name="wizard_failed">მოხდა შეცდომა, გთხოვთ, სცადოთ მოგვიანებით.</string>
   <string name="wizard_server_unavailable">სერვისი მიუეწვდომელია, შეამოწმეთ თქვენი ქსელური კავშირი.</string>
-  <string name="wizard_username_unavailable">ეს მომხმარებლის სახელი უკვე გამოიყენება.</string>
-  <string name="assistant_phone_number_unavailable">ეს ტელეფონის ნომერი უკვე გამოიყენება.\r\nგთხოვთ, შეიყვანოთ სხვა ნომერი.\r\nშეგიძლიათ წაშალოთ არსებული ანგარიში, თუ გსურთ თქვენი ნომერის გამოყენება.</string>
   <string name="wizard_username_incorrect">თქვენი მომხმარებლის სახელი არასწორია.</string>
   <string name="assistant_phone_number_incorrect">თქვენი ტელეფონის ნომერი არასწორია.</string>
   <string name="wizard_email_incorrect">თქვენი ელფოსტა არასწორია.</string>
@@ -111,6 +106,7 @@
   <string name="use_email_for_validation">ელფოსტის მისამართის გამოყენება ანგარიშის დასადატურებლად</string>
   <string name="login_with_username">თქვენი მომხმარებლის სახელის და პაროლის გამოყენება თქვენი ტელეფონის ნომრის მაგივრად</string>
   <string name="phone_number_info_title">რისთვის იქნება გამოყენებული ჩემი ტელეფონის ნომერი?</string>
+  <string name="phone_number_info_content">\nთქვენი ტელეფონის ნომრის დახმარებით, თქვენი მეგობრები შეძლებენ გიპოვონ უფრო მარტივად.\n\nთქვენ დაინახავთ თქვენს მისამართები წიგნში ვინ იყენებს Linphone-ს და თქვენს მეგობრებს ეცოდინებათ, რომ შეუძლიათ ასევე დაგიკავშირდნენ Linphone-ით.\n</string>
   <string name="phone_number_link_info_content">\nთქვენი მეგობრები გიპოვიან უფრო მარტივად, თუ მიაბამთ თქვენს ანგარიშს თქვენს ტელფონის ნომერზე.\n\nთქვენ დაინახავთ თქვენს მისამართები წიგნში ვინ იყენებს Linphone-ს და თქვენს მეგობრებს ეცოდინებათ, რომ შეუძლიათ ასევე დაგიკავშირდნენ Linphone-ით.\n</string>
   <string name="phone_number_link_info_content_already_account">თქვენ შეგიძლიათ გამოიყენოთ თქვენი ტელეფონის ნომერი მხოლოდ ერთ Linphone ანგარიშთან.\n\nთუ უკვე მიბმული გაქვთ თქვენი ნომერი სხვა ანგარიშზე, მაგრამ გსურთ ამის გამოყენება, უბრალოდ მიაბით იგი ახლა და თქვენი ნომერი იქნება ავტომატურად გადმოტანილი ამ ანგარიშზე.</string>
   <!--Status-->
@@ -135,7 +131,6 @@
   <!--In-app-->
   <string name="inapp">პროგრამის-შიდა</string>
   <string name="inapp_notification_title">პროგრამის-შიდა შესყიდვა</string>
-  <string name="inapp_notification_trial_expire">საცდელი პერიოდი მთავრდება %s-ს</string>
   <string name="inapp_notification_account_expire">გამოწერის პერიოდი მთავრდება %s-ს</string>
   <!--Dailer-->
   <string name="address_bar_hint">შეიყვანეთ ნომერი ან მისამართი</string>
@@ -158,7 +153,6 @@
   <string name="no_chat_history">მიმოწერა არ არის</string>
   <string name="delete_conversation">გსურთ არჩეული მიმოწერის წაშლა?</string>
   <string name="delete_message">გსურთ არჩეული შეტყობინების წაშლა?</string>
-  <string name="remote_composing">დაშორებული წერს...</string>
   <string name="share_picture_size_small">პატარა</string>
   <string name="share_picture_size_medium">საშუალო</string>
   <string name="share_picture_size_large">დიდი</string>
@@ -168,7 +162,6 @@
   <string name="image_picker_title">წყაროს არჩევა</string>
   <string name="image_saved">სურათი შენახულია</string>
   <string name="image_not_saved">შეცდომა, სურათი ვერ შეინახა</string>
-  <string name="wait">გთხოვთ, დაელოდოთ...</string>
   <string name="image_transfert_error">ფაილისი გზავნის დროს მოხდა შეცდომა</string>
   <string name="message_not_encrypted">ეს შეტყობინება არ არის დაშიფრული</string>
   <string name="message_cant_be_decrypted">თქვენ მიიღეთ დაშიფრული შეტყობინება, რომლის განშიფრვაც %s-დან არ შეგიძლიათ\nუნდა დაუკავშერდეთ თქვენს კორესპონდენტს იმისათვის, რომ გაცვალოთ ZRTP გასაღებები, თუ გსურთ მომავალი მიღებული შეტყობინებების განშიფრვა.</string>
@@ -177,12 +170,35 @@
   <string name="processing_image">მიმდინარეობს სურათის დამუშავება, შეიძლება დაიკავოს რამოდენიმე წამი, ფაილის ზომის მიხედვით</string>
   <string name="displayed">წაკითხულია</string>
   <string name="delivered">მიღებულია</string>
+  <string name="undelivered">არა მისული</string>
+  <string name="sent">გაგზავნილი</string>
   <string name="resend">თავიდან გაგზავნა</string>
+  <string name="conversation_information">ინფო</string>
+  <string name="administrator">ადმინი</string>
+  <string name="conversation_subject_hint">დაარქვით სახელი ჯგუფს</string>
+  <string name="chat_room_infos_title">ინფო</string>
+  <string name="chat_room_infos_admin">ადმინი</string>
+  <string name="chat_room_participants">მონაწილეები</string>
+  <string name="chat_room_leave_group">ჯგუფის დატოვება</string>
+  <string name="chat_room_creation_filter_hint">კონტაქტის ძიება</string>
+  <string name="conference_created">თქვენ შეუერთდით ჯგუფს</string>
+  <string name="conference_destroyed">თქვენ დატოვეთ ჯგუფი</string>
+  <string name="participant_added">%s შემოგიერთდათ</string>
+  <string name="participant_removed">%s-მ დატოვა</string>
+  <string name="device_added">ახალი მოწყობილობა %s-სთვის</string>
+  <string name="device_removed">მოწყობილობა %s-სთვის წაშლილია</string>
+  <string name="subject_changed">ახალი თემა: %s</string>
+  <string name="admin_set">%s არის ადმინი</string>
+  <string name="admin_unset">%s აღარ არის ადმინი</string>
+  <string name="group_chat_notif" formatted="false">%1: %2</string>
+  <string name="chat_room_you_are_now_admin">თქვენ აწი ადმინი ხართ</string>
+  <string name="chat_room_you_are_no_longer_admin">თქვენ აღარ ხართ ადმინი</string>
+  <string name="chat_room_creation_failed">ჩატის ოთახის შექმნა ვერ მოხერხდა</string>
+  <string name="chat_room_leave_button">დატოვება</string>
+  <string name="separator">: </string>
+  <string name="imdn_info">მიწოდების სტატუსი</string>
+  <string name="add_to_contacts">კონტაქტებში დამატება</string>
   <!--Status Bar-->
-  <string name="status_connected">რეგისტრირებული</string>
-  <string name="status_not_connected">არ არის რეგისტრირებული</string>
-  <string name="status_in_progress">მიმდინარეობს რეგისტრაცია</string>
-  <string name="status_error">რეგისტრაცია ვერ მოხერხდა</string>
   <string name="voicemail_unread">წაუკითხავი შეტყობინება</string>
   <!--Side Menu-->
   <string name="menu_assistant">ასისტენტი</string>
@@ -196,8 +212,6 @@
   <string name="no_current_call">აქტიური ზარი არ არის</string>
   <string name="call_paused_by_remote">თქვენმა მხმობლემა შეაჩერა ზარი</string>
   <string name="couldnt_accept_call">ზარის მიღებისას მოხდა შეცდომა</string>
-  <string name="zrtp_dialog1">დაადასტურეთ შემდეგი SAS მომხმარებელთან:\nთქვით: %s</string>
-  <string name="zrtp_dialog2">\nთქვენმა მხმობელმა უნდა თქვას: %s</string>
   <string name="zrtp_notification_title">SAS</string>
   <string name="zrtp_notification_message">დაადასტურეთ წინა SAS კოდი თქვენს მოკავშირესთან</string>
   <string name="unknown_incoming_call_name">უცნობი</string>
@@ -207,6 +221,7 @@
   <string name="call_stats_ip">IP ოჯახი:</string>
   <string name="call_stats_upload">ატვირთვის გამტარი უნარი:</string>
   <string name="call_stats_download">გადმოტვირთვის გამტარი უნარი:</string>
+  <string name="call_stats_estimated_download">დაახლოებითი გადმოტვირთვის გამტარი უნარი:</string>
   <string name="call_stats_ice">ICE კავშირი:</string>
   <string name="call_stats_video_resolution_sent">გაგზავნილი ვიდეოს გაფართოება:</string>
   <string name="call_stats_video_resolution_received">მიღებული ვიდეოს გაფართოება:</string>
@@ -218,6 +233,7 @@
   <string name="call_stats_encoder_name">ენკოდერი:</string>
   <string name="call_stats_decoder_name">დეკოდერი:</string>
   <string name="call">ზარი</string>
+  <!--Recordings-->
   <!--About-->
   <string name="menu_send_log">ჟურნალის გაგზავნა</string>
   <string name="menu_reset_log">ჟურნალის ჩამოგდება</string>
@@ -232,6 +248,7 @@
   <!--Errors-->
   <string name="skipable_error_service_not_ready">ყურადღება: სერვისი არ არის მზად</string>
   <string name="error">შეცდომა</string>
+  <string name="file_transfer_error">ფაილის გზავნის შეცდომა</string>
   <string name="warning_wrong_destination_address">%s-დან დანიშნულების მისამართის შექმნა ვერ მოხერხდა</string>
   <string name="error_unknown">უცნობი შეცდომა</string>
   <string name="error_call_declined">ზარი უარყოფილია</string>
@@ -244,7 +261,6 @@
   <string name="error_unauthorized">არაავტორიზებული</string>
   <string name="error_io_error">ქსელის შეცდომა</string>
   <string name="download_image_failed">გადმოწერა ვერ მოხერხდა. გთხოვთ, შეამოწმოთ თქვენი ქსელური კავშირი ან სცადოთ მოგვიანებით.</string>
-  <string name="remote_provisioning_failure">დაშორებული პროვიზიული პროფილის გადმოტვირთვა ან მიღება ვერ მოხერხდა...</string>
   <string name="remote_provisioning_again_title">დაშორებული პროვიზია</string>
   <string name="remote_provisioning_again_message">გსურთ პროვიზიის URI-ს შეცვლა?</string>
   <!--Account Settings-->
@@ -279,12 +295,13 @@
   <string name="pref_change_password">პაროლის შეცვლა</string>
   <string name="pref_default_account">გამოყენება ნაგულისხმევად</string>
   <string name="pref_password_changed">პაროლი შეიცვალა</string>
+  <string name="pref_proxy_push_notif">მომენტალური შეტყობინებებზე ნების დართვა</string>
   <!--Settings-->
   <string name="pref_sipaccounts">SIP ანგარიშები</string>
   <string name="default_account_flag">ნაგულისხმევი ანგარიში</string>
   <string name="pref_add_account">ანგარიშის დამატება</string>
   <string name="pref_in_app_store">პროგრამის-შიდა მაღაზია</string>
-  <string name="pref_tunnel">გვირაბი</string>
+  <string name="pref_tunnel_title">გვირაბი</string>
   <string name="pref_tunnel_host">ჰოსტის სახელ</string>
   <string name="pref_tunnel_port">პორტი</string>
   <string name="pref_tunnel_mode">რეჟიმი</string>
@@ -329,11 +346,8 @@
   <string name="pref_call_title">ზარი</string>
   <string name="pref_device_ringtone">მოწყობილობის რეკვის ხმის გამოყენება</string>
   <string name="pref_auto_answer">შემომავალ პასუხებზე ავტო-პასუხი</string>
-  <string name="pref_auto_answer_time">ავტო პასუხის დრო (მილიწამებში)</string>
-  <string name="pref_rfc2833_dtmf">არხის-შიდა DTMF-ების გაგზავნა(RFC2833)</string>
-  <string name="pref_sipinfo_dtmf">არხის-გარე DTMF-ების გაგზავნა(SIP INFO)</string>
-  <string name="pref_call_timeout_title">ზარის ტაიმაუტი (წამებში)</string>
   <string name="pref_voice_mail">ხმოვანი ფოსტის URI</string>
+  <string name="pref_dialer_call">Linphone-ის გამოყენება ნაგულისხმევი ტელეფონის აპლიკაციად</string>
   <!--Chat settings-->
   <string name="pref_chat_title">ჩატი</string>
   <string name="pref_image_sharing_server_title">მიმდინარეობს სერვერის გაზიარება</string>
@@ -366,6 +380,7 @@
   <string name="pref_advanced_title">გაფართოებული</string>
   <string name="pref_debug_title">დებაგი</string>
   <string name="pref_debug">დებაგი</string>
+  <string name="pref_java_debug">Java-ს ჟურნალის გამოყენება</string>
   <string name="pref_friendlist_subscribe">მეგობრების სიის გამოწერა</string>
   <string name="pref_background_mode">ფონის რეჟიმი</string>
   <string name="pref_animation_enable_title">ანიმაციების ჩართვა</string>
@@ -383,6 +398,11 @@
   <string name="pref_audio_use_specific_mode_summary">0=MODE_NORMAL (ნაგულისხმევი), 2=MODE_IN_CALL</string>
   <string name="pref_audio_hacks_use_routing_api_title">მარშრუტირების API ჰაკის გამოყენება</string>
   <string name="pref_audio_hacks_use_galaxys_hack_title">Galaxy S-ს ხმის ჰაკის გამოყენება</string>
+  <!--Device specifics-->
+  <string name="device_power_saver_dialog_button_go_to_settings">პარამეტრები</string>
+  <string name="device_power_saver_dialog_button_later">მოგვიანებით</string>
+  <!--Debug popup-->
+  <string name="debug_popup_title">დებაგი</string>
   <!--Content description-->
   <string name="content_description_back">უკან</string>
   <string name="content_description_dialer">ამკრეფი</string>
@@ -455,6 +475,6 @@
   <string name="content_description_call_options">ზარის პარამეტრები</string>
   <string name="content_description_audio_route">ხმის მარშრუტი</string>
   <string name="content_description_exit_conference">კონფერენციიდან გამოსვლა</string>
-  <string name="content_title_notification_service">Linphone სერვისი</string>
-  <string name="content_title_notification">Linphone-ის შეტყობინება</string>
+  <string name="content_description_conversation_subject">ჯგუფური ჩატის ოთახის თემა</string>
+  <string name="content_description_conversation_infos">ჯგუფური ჩატის ოთახის ინფო</string>
 </resources>

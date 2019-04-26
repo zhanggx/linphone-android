@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<ContactsSource
-        xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Change package, leave vnd.android.cursor.item/ before and .profile at the end. -->
+<ContactsSource xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- This file has been automatically generated, do not edit or commit ! -->
     <ContactsDataKind
-        android:mimeType="vnd.android.cursor.item/org.linphone.profile"
-        android:icon="@drawable/linphone_logo"
-        android:summaryColumn="data2"
         android:detailColumn="data3"
-        android:detailSocialSummary="true"/>
-
+        android:detailSocialSummary="true"
+        android:icon="@drawable/linphone_logo"
+        android:mimeType="vnd.android.cursor.item/vnd.org.linphone.provider.sip_address"
+        android:summaryColumn="data2" />
+    <!-- You can use @string/linphone_address_mime_type above ! You have to hardcode it... -->
 </ContactsSource>

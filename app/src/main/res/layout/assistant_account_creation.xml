@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
-	android:layout_height="match_parent">
+	android:layout_height="match_parent"
+	android:background="?attr/backgroundColor">
 
 	<LinearLayout
 		android:layout_width="match_parent"
@@ -12,7 +13,7 @@
 		<TextView
 			android:id="@+id/assistant_title"
 			android:text="@string/assistant_create_account"
-			style="@style/font6"
+			style="@style/standard_text_font"
 			android:textAllCaps="true"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
@@ -20,7 +21,7 @@
 
 		<TextView
 			android:text="@string/assistant_create_account_part_1"
-			style="@style/font11"
+			style="@style/standard_small_text_font"
 			android:paddingTop="10dp"
 			android:gravity="center_horizontal"
 			android:layout_width="wrap_content"
@@ -49,7 +50,7 @@
 					<TextView
 						android:id="@+id/phone_number_label"
 						android:text="@string/phone_number"
-						style="@style/font13"
+						style="@style/assistant_input_field_header_font"
 						android:textAllCaps="true"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"/>
@@ -62,11 +63,13 @@
 						android:layout_height="20dp"/>
 
 				</RelativeLayout>
+
 				<Button
 					android:id="@+id/select_country"
-					style="@style/font8"
+					style="@style/button_font"
 					android:text="@string/select_your_country"
 					android:background="@drawable/resizable_assistant_button"
+					android:textColor="@drawable/assistant_button_text_color"
 					android:layout_width="match_parent"
 					android:layout_height="40dp"/>
 
@@ -84,23 +87,25 @@
 						<EditText
 							android:id="@+id/dial_code"
 							android:background="@drawable/resizable_textfield"
-							android:textColor="@color/colorB"
+							android:textColor="@color/black_color"
 							android:inputType="phone"
 							android:text="+"
 							android:layout_marginRight="10dp"
 							android:gravity="center"
 							android:layout_width="65dp"
 							android:layout_height="42dp"
+							android:hint="@string/international_prefix"
 							android:maxLines="1"/>
 
 						<EditText
 							android:id="@+id/phone_number"
 							android:background="@drawable/resizable_textfield"
-							android:textColor="@color/colorB"
+							android:textColor="@color/black_color"
 							android:contentDescription="@string/content_description_phone_number_field"
 							android:inputType="phone"
 							android:layout_width="match_parent"
 							android:layout_height="40dp"
+							android:hint="@string/phone_number"
 							android:maxLines="1"/>
 
 					</LinearLayout>
@@ -108,18 +113,19 @@
 					<TextView
 						android:id="@+id/phone_number_error"
 						android:text="@string/error"
-						style="@style/font20"
+						style="@style/assistant_input_field_error_font"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:visibility="invisible"/>
 
 					<TextView
 						android:id="@+id/sip_uri"
-						style="@style/font9"
+						style="@style/contact_organization_font"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"/>
 
 				</LinearLayout>
+
 			</LinearLayout>
 
 			<LinearLayout
@@ -132,7 +138,7 @@
 				<TextView
 					android:id="@+id/username_label"
 					android:text="@string/username"
-					style="@style/font13"
+					style="@style/assistant_input_field_header_font"
 					android:textAllCaps="true"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"/>
@@ -140,17 +146,18 @@
 				<EditText
 					android:id="@+id/username"
 					android:background="@drawable/resizable_textfield"
-					android:textColor="@color/colorB"
+					android:textColor="@color/black_color"
 					android:contentDescription="@string/content_description_username_field"
 					android:inputType="text|textNoSuggestions"
 					android:layout_width="match_parent"
 					android:layout_height="40dp"
+					android:hint="@string/username"
 					android:maxLines="1"/>
 
 				<TextView
 					android:id="@+id/username_error"
 					android:text="@string/error"
-					style="@style/font20"
+					style="@style/assistant_input_field_error_font"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					android:visibility="invisible"/>
@@ -172,7 +179,7 @@
 					<TextView
 						android:id="@+id/email_label"
 						android:text="@string/email"
-						style="@style/font13"
+						style="@style/assistant_input_field_header_font"
 						android:textAllCaps="true"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"/>
@@ -180,7 +187,7 @@
 					<EditText
 						android:id="@+id/email"
 						android:background="@drawable/resizable_textfield"
-						android:textColor="@color/colorB"
+						android:textColor="@color/black_color"
 						android:inputType="textEmailAddress"
 						android:contentDescription="@string/content_description_email_field"
 						android:textCursorDrawable="@null"
@@ -188,54 +195,13 @@
 						android:layout_height="40dp"
 						android:paddingLeft="10dp"
 						android:paddingRight="10dp"
+						android:hint="@string/email"
 						android:maxLines="1"/>
 
 					<TextView
 						android:id="@+id/email_error"
 						android:text="@string/error"
-						style="@style/font20"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:visibility="invisible"/>
-
-				</LinearLayout>
-
-			<LinearLayout
-				android:id="@+id/password_layout"
-				android:visibility="gone"
-				android:orientation="vertical"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content">
-
-				<LinearLayout
-					android:orientation="vertical"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content">
-
-					<TextView
-						android:id="@+id/password_label"
-						style="@style/font13"
-						android:text="@string/password"
-						android:textAllCaps="true"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"/>
-
-					<EditText
-						android:id="@+id/password"
-						android:background="@drawable/resizable_textfield"
-						android:textColor="@color/colorB"
-						android:inputType="textPassword"
-						android:textCursorDrawable="@null"
-						android:layout_width="match_parent"
-						android:layout_height="40dp"
-						android:paddingLeft="10dp"
-						android:paddingRight="10dp"
-						android:maxLines="1"/>
-
-					<TextView
-						android:id="@+id/password_error"
-						android:text="@string/error"
-						style="@style/font20"
+						style="@style/assistant_input_field_error_font"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:visibility="invisible"/>
@@ -243,59 +209,108 @@
 				</LinearLayout>
 
 				<LinearLayout
-					android:id="@+id/password_confirm_layout"
+					android:id="@+id/password_layout"
+					android:visibility="gone"
 					android:orientation="vertical"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content">
 
-					<TextView
-						android:id="@+id/confirm_password_label"
-						android:text="@string/confirm_password"
-						style="@style/font13"
-						android:textAllCaps="true"
+					<LinearLayout
+						android:orientation="vertical"
 						android:layout_width="match_parent"
-						android:layout_height="wrap_content"/>
+						android:layout_height="wrap_content">
 
-					<EditText
-						android:id="@+id/confirm_password"
-						android:background="@drawable/resizable_textfield"
-						android:textColor="@color/colorB"
-						android:inputType="textPassword"
-						android:contentDescription="@string/content_description_confirm_password_field"
-						android:textCursorDrawable="@null"
-						android:layout_width="match_parent"
-						android:layout_height="40dp"
-						android:paddingLeft="10dp"
-						android:paddingRight="10dp"
-						android:maxLines="1"/>
+						<TextView
+							android:id="@+id/password_label"
+							style="@style/assistant_input_field_header_font"
+							android:text="@string/password"
+							android:textAllCaps="true"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"/>
 
-					<TextView
-						android:id="@+id/confirm_password_error"
-						android:text="@string/error"
-						style="@style/font20"
+						<EditText
+							android:id="@+id/password"
+							android:background="@drawable/resizable_textfield"
+							android:textColor="@color/black_color"
+							android:inputType="textPassword"
+							android:textCursorDrawable="@null"
+							android:layout_width="match_parent"
+							android:layout_height="40dp"
+							android:paddingLeft="10dp"
+							android:paddingRight="10dp"
+							android:hint="@string/password"
+							android:maxLines="1"/>
+
+						<TextView
+							android:id="@+id/password_error"
+							android:text="@string/error"
+							style="@style/assistant_input_field_error_font"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:visibility="invisible"/>
+
+					</LinearLayout>
+
+					<LinearLayout
+						android:id="@+id/password_confirm_layout"
+						android:orientation="vertical"
 						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:visibility="invisible"/>
+						android:layout_height="wrap_content">
+
+						<TextView
+							android:id="@+id/confirm_password_label"
+							android:text="@string/confirm_password"
+							style="@style/assistant_input_field_header_font"
+							android:textAllCaps="true"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"/>
+
+						<EditText
+							android:id="@+id/confirm_password"
+							android:background="@drawable/resizable_textfield"
+							android:textColor="@color/black_color"
+							android:inputType="textPassword"
+							android:contentDescription="@string/content_description_confirm_password_field"
+							android:textCursorDrawable="@null"
+							android:layout_width="match_parent"
+							android:layout_height="40dp"
+							android:paddingLeft="10dp"
+							android:paddingRight="10dp"
+							android:hint="@string/confirm_password"
+							android:maxLines="1"/>
+
+						<TextView
+							android:id="@+id/confirm_password_error"
+							android:text="@string/error"
+							style="@style/assistant_input_field_error_font"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:visibility="invisible"/>
+
+					</LinearLayout>
 
 				</LinearLayout>
-
-
-			</LinearLayout>
 
 			</LinearLayout>
 
 			<CheckBox
 				android:id="@+id/use_username"
 				android:visibility="gone"
+				android:paddingLeft="5dp"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:text="@string/use_username_instead_or_phone_number"/>
+                android:button="@drawable/checkbox"
+				android:text="@string/use_username_instead_or_phone_number"
+                android:textColor="?attr/primaryTextColor"/>
 
 			<CheckBox
 				android:id="@+id/use_email"
 				android:visibility="gone"
+				android:paddingLeft="5dp"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
+                android:button="@drawable/checkbox"
+                android:textColor="?attr/primaryTextColor"
 				android:text="@string/use_email_for_validation"/>
 
 			<Button
@@ -303,7 +318,7 @@
 				android:text="@string/assistant_create_account"
 				android:background="@drawable/assistant_button"
 				android:textColor="@drawable/assistant_button_text_color"
-				style="@style/font8"
+				style="@style/button_font"
 				android:layout_width="wrap_content"
 				android:layout_height="40dp"
 				android:paddingLeft="10dp"
@@ -314,8 +329,8 @@
 				android:id="@+id/assistant_skip"
 				android:visibility="gone"
 				android:text="@string/maybe_later"
-				android:textColor="@drawable/assistant_button_text_color"
-				style="@style/font10"
+				android:textColor="?attr/primaryTextColor"
+				android:textSize="18sp"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:paddingLeft="10dp"
@@ -323,5 +338,7 @@
 				android:layout_marginTop="20dp"/>
 
 		</LinearLayout>
+
 	</LinearLayout>
+
 </ScrollView>

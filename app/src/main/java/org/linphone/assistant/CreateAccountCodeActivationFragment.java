@@ -18,13 +18,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-import org.linphone.LinphoneManager;
-import org.linphone.LinphonePreferences;
-import org.linphone.R;
-import org.linphone.core.LinphoneAccountCreator;
-import org.linphone.core.LinphoneAccountCreator.LinphoneAccountCreatorListener;
-import org.linphone.core.LinphoneCoreFactory;
-
 import android.app.Fragment;
 import android.os.Bundle;
 import android.text.Editable;
@@ -38,176 +31,197 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import org.linphone.LinphoneManager;
+import org.linphone.R;
+import org.linphone.core.AccountCreator;
+import org.linphone.core.AccountCreatorListener;
+import org.linphone.settings.LinphonePreferences;
 
-public class CreateAccountCodeActivationFragment extends Fragment implements LinphoneAccountCreatorListener {
-	private String username, phone, dialcode;
-	private TextView title, phonenumber;
-	private EditText code;
-	private boolean recoverAccount = false, linkAccount = false;
-	private int code_length, accountNumber;
-	private ImageView back;
-	private Button checkAccount;
-	private LinphoneAccountCreator accountCreator;
+public class CreateAccountCodeActivationFragment extends Fragment
+        implements AccountCreatorListener {
+    private String mUsername, mPhone, mDialcode;
+    private TextView mTitle, mPhonenumber;
+    private EditText mCode;
+    private boolean mRecoverAccount = false, mLinkAccount = false;
+    private int mCodeLength, mAccountNumber;
+    private ImageView mBack;
+    private Button mCheckAccount;
+    private AccountCreator mAccountCreator;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.assistant_account_creation_code_activation, container, false);
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view =
+                inflater.inflate(
+                        R.layout.assistant_account_creation_code_activation, container, false);
 
-		username = getArguments().getString("Username");
-		phone = getArguments().getString("Phone");
-		dialcode = getArguments().getString("Dialcode");
-		recoverAccount = getArguments().getBoolean("RecoverAccount");
-		linkAccount = getArguments().getBoolean("LinkAccount");
-		accountNumber = getArguments().getInt("AccountNumber");
+        mUsername = getArguments().getString("Username");
+        mPhone = getArguments().getString("Phone");
+        mDialcode = getArguments().getString("Dialcode");
+        mRecoverAccount = getArguments().getBoolean("RecoverAccount");
+        mLinkAccount = getArguments().getBoolean("LinkAccount");
+        mAccountNumber = getArguments().getInt("AccountNumber");
 
-		code_length = LinphonePreferences.instance().getCodeLength();
-		accountCreator = LinphoneCoreFactory.instance().createAccountCreator(LinphoneManager.getLc(), LinphonePreferences.instance().getXmlrpcUrl());
-		accountCreator.setListener(this);
-		accountCreator.setUsername(username);
-		accountCreator.setPhoneNumber(phone, dialcode);
+        mCodeLength = LinphonePreferences.instance().getCodeLength();
+        mAccountCreator =
+                LinphoneManager.getLc()
+                        .createAccountCreator(LinphonePreferences.instance().getXmlrpcUrl());
+        mAccountCreator.setListener(this);
+        mAccountCreator.setUsername(mUsername);
+        mAccountCreator.setPhoneNumber(mPhone, mDialcode);
 
-		back = (ImageView) view.findViewById(R.id.back);
-		if (back != null)
-			back.setVisibility(Button.INVISIBLE);
+        mBack = view.findViewById(R.id.back);
+        if (mBack != null) mBack.setVisibility(Button.INVISIBLE);
 
-		title = (TextView) view.findViewById(R.id.title_account_activation);
-		if (linkAccount) {
-			title.setText(getString(R.string.assistant_link_account));
-		} else if (recoverAccount) {
-			title.setText(getString(R.string.assistant_linphone_account));
-		}
+        mTitle = view.findViewById(R.id.title_account_activation);
+        if (mLinkAccount) {
+            mTitle.setText(getString(R.string.assistant_link_account));
+        } else if (mRecoverAccount) {
+            mTitle.setText(getString(R.string.assistant_linphone_account));
+        }
 
-		phonenumber = (TextView) view.findViewById(R.id.send_phone_number);
-		phonenumber.setText(accountCreator.getPhoneNumber());
+        mPhonenumber = view.findViewById(R.id.send_phone_number);
+        mPhonenumber.setText(mAccountCreator.getPhoneNumber());
 
-		code = (EditText) view.findViewById(R.id.assistant_code);
-		code.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        mCode = view.findViewById(R.id.assistant_code);
+        mCode.addTextChangedListener(
+                new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(
+                            CharSequence s, int start, int count, int after) {}
 
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
-			@Override
-			public void afterTextChanged(Editable s) {
-				if(s.length() == code_length){
-					checkAccount.setEnabled(true);
-				} else {
-					checkAccount.setEnabled(false);
-				}
-			}
-		});
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        if (s.length() == mCodeLength) {
+                            mCheckAccount.setEnabled(true);
+                        } else {
+                            mCheckAccount.setEnabled(false);
+                        }
+                    }
+                });
 
-		checkAccount = (Button) view.findViewById(R.id.assistant_check);
-		checkAccount.setEnabled(false);
-		checkAccount.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				checkAccount.setEnabled(false);
-				accountCreator.setActivationCode(code.getText().toString());
-				if(linkAccount){
-					linkAccount();
-				} else {
-					activateAccount();
-				}
-			}
-		});
+        mCheckAccount = view.findViewById(R.id.assistant_check);
+        mCheckAccount.setEnabled(false);
+        mCheckAccount.setOnClickListener(
+                new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mCheckAccount.setEnabled(false);
+                        mAccountCreator.setActivationCode(mCode.getText().toString());
+                        if (mLinkAccount) {
+                            linkAccount();
+                        } else {
+                            activateAccount();
+                        }
+                    }
+                });
 
+        return view;
+    }
 
-		return view;
-	}
+    private void linkAccount() {
+        mAccountCreator.setUsername(
+                LinphonePreferences.instance().getAccountUsername(mAccountNumber));
+        mAccountCreator.setHa1(LinphonePreferences.instance().getAccountHa1(mAccountNumber));
+        mAccountCreator.activateAlias();
+    }
 
-	private void linkAccount(){
-		accountCreator.setUsername(LinphonePreferences.instance().getAccountUsername(accountNumber));
-		accountCreator.setHa1(LinphonePreferences.instance().getAccountHa1(accountNumber));
-		accountCreator.activatePhoneNumberLink();
-	}
+    private void activateAccount() {
+        if (mAccountCreator.getUsername() == null) {
+            mAccountCreator.setUsername(mAccountCreator.getPhoneNumber());
+        }
+        mAccountCreator.activateAccount();
+    }
 
-	private void activateAccount() {
-		if(accountCreator.getUsername() == null){
-			accountCreator.setUsername(accountCreator.getPhoneNumber());
-		}
-		accountCreator.activateAccount();
-	}
+    @Override
+    public void onIsAccountExist(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorIsAccountUsed(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
+    @Override
+    public void onCreateAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorAccountCreated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
+    @Override
+    public void onActivateAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {
+        if (AssistantActivity.instance() == null) {
+            return;
+        }
+        if (status.equals(AccountCreator.Status.AccountActivated)) {
+            mCheckAccount.setEnabled(true);
+            if (accountCreator.getUsername() != null) {
+                AssistantActivity.instance().linphoneLogIn(accountCreator);
+                if (!mRecoverAccount) {
+                    AssistantActivity.instance().isAccountVerified();
+                } else {
+                    AssistantActivity.instance().success();
+                }
+            } else {
+                AssistantActivity.instance().linphoneLogIn(accountCreator);
+                if (!mRecoverAccount) {
+                    AssistantActivity.instance().isAccountVerified();
+                } else {
+                    AssistantActivity.instance().success();
+                }
+            }
+        } else if (status.equals(AccountCreator.Status.RequestFailed)) {
+            Toast.makeText(
+                            getActivity(),
+                            getString(R.string.wizard_server_unavailable),
+                            Toast.LENGTH_LONG)
+                    .show();
+        } else {
+            Toast.makeText(
+                            getActivity(),
+                            getString(R.string.assistant_error_confirmation_code),
+                            Toast.LENGTH_LONG)
+                    .show();
+            AssistantActivity.instance().displayAssistantLinphoneLogin(mPhone, mDialcode);
+        }
+    }
 
-	@Override
-	public void onAccountCreatorAccountActivated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-		if (AssistantActivity.instance() == null) {
-			return;
-		}
-		if (status.equals(LinphoneAccountCreator.RequestStatus.AccountActivated)) {
-			checkAccount.setEnabled(true);
-			if (accountCreator.getUsername() != null) {
-				AssistantActivity.instance().linphoneLogIn(accountCreator);
-				if(!recoverAccount){
-					AssistantActivity.instance().isAccountVerified(accountCreator.getUsername());
-				} else {
-					AssistantActivity.instance().success();
-				}
-			} else {
-				AssistantActivity.instance().linphoneLogIn(accountCreator);
-				if(!recoverAccount) {
-					AssistantActivity.instance().isAccountVerified(accountCreator.getPhoneNumber());
-				} else {
-					AssistantActivity.instance().success();
-				}
-			}
-		} else if (status.equals(LinphoneAccountCreator.RequestStatus.Failed)) {
-			Toast.makeText(getActivity(), getString(R.string.wizard_server_unavailable), Toast.LENGTH_LONG).show();
-		} else {
-			Toast.makeText(getActivity(), getString(R.string.assistant_error_confirmation_code), Toast.LENGTH_LONG).show();
-			AssistantActivity.instance().displayAssistantLinphoneLogin(phone, dialcode);
-		}
-	}
+    @Override
+    public void onLinkAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorAccountLinkedWithPhoneNumber(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
+    @Override
+    public void onActivateAlias(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {
+        if (AssistantActivity.instance() == null) {
+            return;
+        }
+        if (status.equals(AccountCreator.Status.AccountActivated)) {
+            LinphonePreferences.instance()
+                    .setPrefix(
+                            mAccountNumber,
+                            org.linphone.core.Utils.getPrefixFromE164(
+                                    accountCreator.getPhoneNumber()));
+            LinphonePreferences.instance().setLinkPopupTime("");
+            AssistantActivity.instance().hideKeyboard();
+            AssistantActivity.instance().success();
+        }
+    }
 
-	}
+    @Override
+    public void onIsAccountActivated(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorPhoneNumberLinkActivated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-		if (AssistantActivity.instance() == null) {
-			return;
-		}
-		if(status.equals(LinphoneAccountCreator.RequestStatus.AccountActivated)){
-			LinphonePreferences.instance().setPrefix(accountNumber, accountCreator.getPrefix(accountCreator.getPhoneNumber()));
-			LinphonePreferences.instance().setLinkPopupTime("");
-			AssistantActivity.instance().hideKeyboard();
-			AssistantActivity.instance().success();
-		}
-	}
+    @Override
+    public void onRecoverAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorIsAccountActivated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
+    @Override
+    public void onIsAccountLinked(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	}
+    @Override
+    public void onIsAliasUsed(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorPhoneAccountRecovered(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
-
-	@Override
-	public void onAccountCreatorIsAccountLinked(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-
-	}
-
-	@Override
-	public void onAccountCreatorIsPhoneNumberUsed(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-
-	}
-
-	@Override
-	public void onAccountCreatorPasswordUpdated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-
-	}
+    @Override
+    public void onUpdateAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 }

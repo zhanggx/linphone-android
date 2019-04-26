@@ -1,8 +1,5 @@
 package org.linphone.compatibility;
 
-import android.widget.TextView;
-import android.annotation.TargetApi;
-
 /*
 ApiTwentyThreePlus.java
 Copyright (C) 2017  Belledonne Communications, Grenoble, France
@@ -22,9 +19,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.os.PowerManager;
+import android.widget.TextView;
+
 @TargetApi(23)
-public class ApiTwentyThreePlus {
-	public static void setTextAppearance(TextView textview, int style) {
-		textview.setTextAppearance(style);
-	}
+class ApiTwentyThreePlus {
+    public static void setTextAppearance(TextView textview, int style) {
+        textview.setTextAppearance(style);
+    }
+
+    public static boolean isAppIdleMode(Context context) {
+        return ((PowerManager) context.getSystemService(Context.POWER_SERVICE)).isDeviceIdleMode();
+    }
 }

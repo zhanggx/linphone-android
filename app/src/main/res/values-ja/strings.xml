@@ -6,15 +6,14 @@
   <string name="addressbook_label">Linphone</string>
   <string name="notification_title">Linphone</string>
   <string name="wait_dialog_text">はじめる</string>
-  <string name="notification_registered">%sを登録しました</string>
-  <string name="notification_register_failure">%sの登録に失敗しました</string>
   <string name="tunnel_host"></string>
   <string name="about_version">Linphone Android %s</string>
   <string name="about_liblinphone_version">Linphone Core %s</string>
-  <string name="about_link">www.linphone.org</string>
   <string name="sync_account_name">linphoneに問い合わせる</string>
+  <!--Notifications-->
   <!--Common-->
   <string name="username">ユーザー名</string>
+  <string name="userid">ユーザID(オプション)</string>
   <string name="phone_number">電話番号</string>
   <string name="display_name">表示名</string>
   <string name="password">パスワード</string>
@@ -40,10 +39,10 @@
   <string name="decline">接続しない</string>
   <string name="conference">会談</string>
   <string name="link">リンク</string>
-  <string name="link_account_popup">アカウント%sと電話番号をリンクしますか？</string>
   <string name="maybe_later">また今度</string>
   <string name="later">そのうち</string>
   <string name="no">いいえ</string>
+  <string name="ok">OK</string>
   <string name="yes">はい</string>
   <string name="link_account">アカウントをリンクする</string>
   <!--Launch screen-->
@@ -85,11 +84,10 @@
   <string name="assistant_error_bad_credentials">ユーザー名かパスワードが異なります</string>
   <string name="assistant_codec_down_question">Cisco Systems,Incが提供するOpenH264ビデオコーデックをダウンロードしますか？</string>
   <string name="assistant_codec_downloading">Cisco Systems,Incが提供するOpenH264ビデオコーデックをダウンロードします。</string>
+  <string name="assistant_openh264_downloading">OpenH264をダウンロードしています。</string>
   <string name="assistant_codec_downloaded">Cisco Systems,Incが提供するOpenH264ビデオコーデックがダウンロードされました。</string>
   <string name="wizard_failed">エラーが発生しました。のちほど再試行してください。</string>
   <string name="wizard_server_unavailable">ネットワーク接続を確認してください。</string>
-  <string name="wizard_username_unavailable">このユーザー名はすでに使われています。</string>
-  <string name="assistant_phone_number_unavailable">電話番号は使用中です。\r\n別の番号を入力してください。電話番号を再利用する場合は、既存のアカウントを削除してください。</string>
   <string name="wizard_username_incorrect">不正なユーザー名です</string>
   <string name="assistant_phone_number_incorrect">不正な電話番号です</string>
   <string name="wizard_email_incorrect">不正なメールアドレスです</string>
@@ -130,7 +128,6 @@
   <!--In-app-->
   <string name="inapp">アプリ内で</string>
   <string name="inapp_notification_title">アプリ内購入</string>
-  <string name="inapp_notification_trial_expire">試用期間 %s</string>
   <string name="inapp_notification_account_expire">使用期間  %s</string>
   <!--Dailer-->
   <string name="address_bar_hint">番号もしくはアドレスを入力してください</string>
@@ -153,7 +150,6 @@
   <string name="no_chat_history">新しい会話はありません</string>
   <string name="delete_conversation">本当に選択した会話を削除しますか？</string>
   <string name="delete_message">本当に選択したメッセージを削除しますか？</string>
-  <string name="remote_composing">リモート先が入力中...</string>
   <string name="share_picture_size_small">小さい</string>
   <string name="share_picture_size_medium">中くらい</string>
   <string name="share_picture_size_large">大きい</string>
@@ -163,13 +159,13 @@
   <string name="image_picker_title">選択したソース</string>
   <string name="image_saved">保存した画像</string>
   <string name="image_not_saved">エラー、画像が保存できません。</string>
-  <string name="wait">お待ちください...</string>
+  <string name="message_not_encrypted">このメッセージは暗号化されていません。</string>
+  <string name="message_cant_be_decrypted_notif">このメッセージを復号化することが出来ませんでした。</string>
   <string name="processing_image">画像の処理は、ファイルサイズによっては数秒かかることがあります</string>
+  <string name="resend">再送信</string>
+  <string name="add_to_contacts">連絡先に追加</string>
+  <string name="download_file">ダウンロード</string>
   <!--Status Bar-->
-  <string name="status_connected">登録済</string>
-  <string name="status_not_connected">登録なし</string>
-  <string name="status_in_progress">登録に問題があります</string>
-  <string name="status_error">登録できませんでした</string>
   <string name="voicemail_unread">未読メッセージ</string>
   <!--Side Menu-->
   <string name="menu_assistant">アシスタント</string>
@@ -191,11 +187,14 @@
   <string name="call_stats_ice">ICE 接続:</string>
   <string name="call_stats_video_resolution_sent">送信ビデオ解像度：</string>
   <string name="call_stats_video_resolution_received">受信ビデオ解像度：</string>
+  <string name="call_stats_video_fps_sent">送信ビデオfps:</string>
+  <string name="call_stats_video_fps_received">受信ビデオfps:</string>
   <string name="call_stats_sender_loss_rate">送信ロス：</string>
   <string name="call_stats_receiver_loss_rate">受信ロス：</string>
   <string name="call_stats_encoder_name">エンコーダー：</string>
   <string name="call_stats_decoder_name">デコーダー：</string>
   <string name="call">発信</string>
+  <!--Recordings-->
   <!--About-->
   <string name="menu_send_log">ログを送信する</string>
   <string name="menu_reset_log">ログをリセットする</string>
@@ -216,12 +215,12 @@
   <string name="error_user_busy">ビジーです</string>
   <string name="error_user_not_found">ユーザーがおりません</string>
   <string name="error_incompatible_media">互換性のないメディアパラメーター</string>
+  <string name="error_low_bandwidth">あなたの相手の通信幅が狭いのでビデオが使えません</string>
   <string name="error_network_unreachable">ネットワークに到達できません</string>
   <string name="error_bad_credentials">不正な証明書です</string>
   <string name="error_unauthorized">無断</string>
   <string name="error_io_error">ネットワークエラー</string>
   <string name="download_image_failed">ダウンロードに失敗しました。ネットワークを確認して再度操作してください。</string>
-  <string name="remote_provisioning_failure">ダウンロードした、リモートプロビジョニング設定を適用できませんでした...</string>
   <string name="remote_provisioning_again_title">遠隔準備</string>
   <string name="remote_provisioning_again_message">本当にプロビジョニングのURIを変更しますか？</string>
   <!--Account Settings-->
@@ -261,7 +260,7 @@
   <string name="default_account_flag">デフォルトのアカウント</string>
   <string name="pref_add_account">アカウントを追加する</string>
   <string name="pref_in_app_store">アプリストアで</string>
-  <string name="pref_tunnel">トンネル</string>
+  <string name="pref_tunnel_title">トンネル</string>
   <string name="pref_tunnel_host">ホスト名</string>
   <string name="pref_tunnel_port">ポート</string>
   <string name="pref_tunnel_mode">モード</string>
@@ -306,9 +305,8 @@
   <string name="pref_call_title">発信</string>
   <string name="pref_device_ringtone">設定してある着信音を使用する</string>
   <string name="pref_auto_answer">着信に自動で応答する</string>
-  <string name="pref_rfc2833_dtmf">DTMFをインバンド(RFC2833)で送信する</string>
-  <string name="pref_sipinfo_dtmf">DTMFをSIP(情報)で送信する</string>
   <string name="pref_voice_mail">音声メールのURI</string>
+  <string name="pref_dialer_call">Linphoneを標準の電話アプリとして使う</string>
   <!--Chat settings-->
   <string name="pref_chat_title">チャット</string>
   <string name="pref_image_sharing_server_title">共有サーバー</string>
@@ -356,6 +354,11 @@
   <string name="pref_audio_use_specific_mode_summary">0=MODE_NORMAL (デフォルト), 2=MODE_IN_CALL</string>
   <string name="pref_audio_hacks_use_routing_api_title">ルーティングAPIをハックする</string>
   <string name="pref_audio_hacks_use_galaxys_hack_title">Galaxy Sハックを使用する</string>
+  <!--Device specifics-->
+  <string name="device_power_saver_dialog_button_go_to_settings">設定</string>
+  <string name="device_power_saver_dialog_button_later">そのうち</string>
+  <!--Debug popup-->
+  <string name="debug_popup_title">デバッグ</string>
   <!--Content description-->
   <string name="content_description_back">戻る</string>
   <string name="content_description_dialer">ダイヤラー</string>
@@ -427,5 +430,4 @@
   <string name="content_description_call_options">発信オプション</string>
   <string name="content_description_audio_route">オーディオルート</string>
   <string name="content_description_exit_conference">会議を終了する</string>
-  <string name="content_title_notification_service">サービス</string>
 </resources>

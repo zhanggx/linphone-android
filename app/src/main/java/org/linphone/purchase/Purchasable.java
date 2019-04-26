@@ -25,81 +25,74 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 public class Purchasable {
-	private String id, title, description, price;
-	private long expire;
-	private String purchasePayload, purchasePayloadSignature;
-	private String userData;
+    private final String mId;
+    private String mTitle;
+    private String mDescription;
+    private String mPrice;
+    private String mPurchasePayload, mPurchasePayloadSignature;
+    private String mUserData;
 
-	public Purchasable(String id) {
-		this.id = id;
-	}
+    public Purchasable(String id) {
+        this.mId = id;
+    }
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return mId;
+    }
 
-	public String getTitle() {
-		return title;
-	}
+    public String getTitle() {
+        return mTitle;
+    }
 
-	public Purchasable setTitle(String title) {
-		this.title = title;
-		return this;
-	}
+    public Purchasable setTitle(String title) {
+        this.mTitle = title;
+        return this;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() {
+        return mDescription;
+    }
 
-	public Purchasable setDescription(String description) {
-		this.description = description;
-		return this;
-	}
+    public Purchasable setDescription(String description) {
+        this.mDescription = description;
+        return this;
+    }
 
-	public String getPrice() {
-		return price;
-	}
+    public String getPrice() {
+        return mPrice;
+    }
 
-	public Purchasable setPrice(String price) {
-		this.price = price;
-		return this;
-	}
+    public Purchasable setPrice(String price) {
+        this.mPrice = price;
+        return this;
+    }
 
-	public long getExpire() {
-		return expire;
-	}
+    public String getExpireDate() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault());
+        Date date = new Date(0);
+        return dateFormat.format(date);
+    }
 
-	public String getExpireDate() {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault());
-		Date date = new Date(expire);
-		return dateFormat.format(date);
-	}
+    public Purchasable setPayloadAndSignature(String payload, String signature) {
+        this.mPurchasePayload = payload;
+        this.mPurchasePayloadSignature = signature;
+        return this;
+    }
 
-	public Purchasable setExpire(long expire) {
-		this.expire = expire;
-		return this;
-	}
+    public String getPayload() {
+        return this.mPurchasePayload;
+    }
 
-	public Purchasable setPayloadAndSignature(String payload, String signature) {
-		this.purchasePayload = payload;
-		this.purchasePayloadSignature = signature;
-		return this;
-	}
+    public String getPayloadSignature() {
+        return this.mPurchasePayloadSignature;
+    }
 
-	public String getPayload() {
-		return this.purchasePayload;
-	}
+    public String getUserData() {
+        return this.mUserData;
+    }
 
-	public String getPayloadSignature() {
-		return this.purchasePayloadSignature;
-	}
-
-	public Purchasable setUserData(String data) {
-		this.userData = data;
-		return this;
-	}
-
-	public String getUserData() {
-		return this.userData;
-	}
+    public Purchasable setUserData(String data) {
+        this.mUserData = data;
+        return this;
+    }
 }

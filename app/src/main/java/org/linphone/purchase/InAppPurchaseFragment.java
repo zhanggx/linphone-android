@@ -18,13 +18,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-import java.util.Locale;
-
-import org.linphone.LinphoneManager;
-import org.linphone.LinphonePreferences;
-import org.linphone.R;
-import org.linphone.core.LinphoneProxyConfig;
-
 import android.app.Fragment;
 import android.os.Bundle;
 import android.text.Editable;
@@ -36,111 +29,114 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
+import java.util.Locale;
+import org.linphone.LinphoneManager;
+import org.linphone.R;
+import org.linphone.core.ProxyConfig;
+import org.linphone.settings.LinphonePreferences;
 
 public class InAppPurchaseFragment extends Fragment implements View.OnClickListener {
-	private LinearLayout usernameLayout;
-	private EditText username, email;
-	private TextView errorMessage;
+    private LinearLayout mUsernameLayout;
+    private EditText mUsername, mEmail;
+    private TextView mErrorMessage;
 
-	private boolean usernameOk = false, emailOk = false;
-	private String defaultUsername, defaultEmail;
-	private Button buyItemButton, recoverAccountButton;
+    private boolean mUsernameOk = false, mEmailOk = false;
+    private String mDefaultUsername, mDefaultEmail;
+    private Button mBuyItemButton;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-						 Bundle savedInstanceState) {
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-		super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);
 
-		View view = inflater.inflate(R.layout.in_app_store, container, false);
+        View view = inflater.inflate(R.layout.in_app_store, container, false);
 
-		String id = getArguments().getString("item_id");
-		Purchasable item = InAppPurchaseActivity.instance().getPurchasedItem(id);
-		buyItemButton = (Button) view.findViewById(R.id.inapp_button);
+        String id = getArguments().getString("item_id");
+        Purchasable item = InAppPurchaseActivity.instance().getPurchasedItem(id);
+        mBuyItemButton = view.findViewById(R.id.inapp_button);
 
-		displayBuySubscriptionButton(item);
+        displayBuySubscriptionButton(item);
 
-		defaultEmail = InAppPurchaseActivity.instance().getGmailAccount();
-		defaultUsername = LinphonePreferences.instance().getAccountUsername(LinphonePreferences.instance().getDefaultAccountIndex());
+        mDefaultEmail = InAppPurchaseActivity.instance().getGmailAccount();
+        mDefaultUsername =
+                LinphonePreferences.instance()
+                        .getAccountUsername(
+                                LinphonePreferences.instance().getDefaultAccountIndex());
 
-		usernameLayout = (LinearLayout) view.findViewById(R.id.username_layout);
-		username = (EditText) view.findViewById(R.id.username);
-		if(!getResources().getBoolean(R.bool.hide_username_in_inapp)){
-			usernameLayout.setVisibility(View.VISIBLE);
-			username.setText(LinphonePreferences.instance().getAccountUsername(LinphonePreferences.instance().getDefaultAccountIndex()));
+        mUsernameLayout = view.findViewById(R.id.username_layout);
+        mUsername = view.findViewById(R.id.username);
+        if (!getResources().getBoolean(R.bool.hide_username_in_inapp)) {
+            mUsernameLayout.setVisibility(View.VISIBLE);
+            mUsername.setText(
+                    LinphonePreferences.instance()
+                            .getAccountUsername(
+                                    LinphonePreferences.instance().getDefaultAccountIndex()));
 
-			addUsernameHandler(username, errorMessage);
-		} else {
-			if(defaultUsername != null){
-				usernameLayout.setVisibility(View.GONE);
-				usernameOk = true;
-			}
-		}
+            addUsernameHandler(mUsername, mErrorMessage);
+        } else {
+            if (mDefaultUsername != null) {
+                mUsernameLayout.setVisibility(View.GONE);
+                mUsernameOk = true;
+            }
+        }
 
-		email = (EditText) view.findViewById(R.id.email);
-		if(defaultEmail != null){
-			email.setText(defaultEmail);
-			emailOk = true;
-		}
+        mEmail = view.findViewById(R.id.email);
+        if (mDefaultEmail != null) {
+            mEmail.setText(mDefaultEmail);
+            mEmailOk = true;
+        }
 
-		buyItemButton.setEnabled(emailOk && usernameOk);
-		errorMessage = (TextView) view.findViewById(R.id.username_error);
+        mBuyItemButton.setEnabled(mEmailOk && mUsernameOk);
+        mErrorMessage = view.findViewById(R.id.username_error);
 
-		return view;
-	}
+        return view;
+    }
 
-	private void addUsernameHandler(final EditText field, final TextView errorMessage) {
-		field.addTextChangedListener(new TextWatcher() {
-			public void afterTextChanged(Editable s) {
+    private void addUsernameHandler(final EditText field, final TextView errorMessage) {
+        field.addTextChangedListener(
+                new TextWatcher() {
+                    public void afterTextChanged(Editable s) {}
 
-			}
+                    public void beforeTextChanged(
+                            CharSequence s, int start, int count, int after) {}
 
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    public void onTextChanged(CharSequence s, int start, int count, int after) {
+                        mUsernameOk = false;
+                        String username = s.toString();
+                        if (isUsernameCorrect(username)) {
+                            mUsernameOk = true;
+                            errorMessage.setText("");
+                        } else {
+                            errorMessage.setText(R.string.wizard_username_incorrect);
+                        }
+                        if (mBuyItemButton != null) mBuyItemButton.setEnabled(mUsernameOk);
+                    }
+                });
+    }
 
-			}
+    private boolean isUsernameCorrect(String username) {
+        ProxyConfig lpc = LinphoneManager.getLc().createProxyConfig();
+        return lpc.isPhoneNumber(username);
+    }
 
-			public void onTextChanged(CharSequence s, int start, int count, int after) {
-				usernameOk = false;
-				String username = s.toString();
-				if (isUsernameCorrect(username)) {
-					usernameOk = true;
-					errorMessage.setText("");
-				} else {
-					errorMessage.setText(R.string.wizard_username_incorrect);
-				}
-				if (buyItemButton != null) buyItemButton.setEnabled(usernameOk);
-				if (recoverAccountButton != null) recoverAccountButton.setEnabled(usernameOk);
-			}
-		});
-	}
+    private void displayBuySubscriptionButton(Purchasable item) {
+        mBuyItemButton.setText("Buy account (" + item.getPrice() + ")");
+        mBuyItemButton.setTag(item);
+        mBuyItemButton.setOnClickListener(this);
+        mBuyItemButton.setEnabled(mUsernameOk && mEmailOk);
+    }
 
-	private boolean isUsernameCorrect(String username) {
-		LinphoneProxyConfig lpc = LinphoneManager.getLc().createProxyConfig();
-		return lpc.isPhoneNumber(username);
-	}
+    @Override
+    public void onClick(View v) {
+        Purchasable item = (Purchasable) v.getTag();
+        InAppPurchaseActivity.instance().buyInapp(getUsername(), item);
+    }
 
-	private void displayBuySubscriptionButton(Purchasable item) {
-		buyItemButton.setText("Buy account (" + item.getPrice() + ")");
-		buyItemButton.setTag(item);
-		buyItemButton.setOnClickListener(this);
-		buyItemButton.setEnabled(usernameOk && emailOk);
-	}
-
-	@Override
-	public void onClick(View v) {
-		Purchasable item = (Purchasable) v.getTag();
-		if (v.equals(recoverAccountButton)) {
-			//TODO
-		} else {
-			InAppPurchaseActivity.instance().buyInapp(getUsername(), item);
-		}
-	}
-
-	private String getUsername() {
-		String username = this.username.getText().toString();
-		LinphoneProxyConfig lpc = LinphoneManager.getLc().createProxyConfig();
-		username = lpc.normalizePhoneNumber(username);
-		return username.toLowerCase(Locale.getDefault());
-	}
+    private String getUsername() {
+        String username = this.mUsername.getText().toString();
+        ProxyConfig lpc = LinphoneManager.getLc().createProxyConfig();
+        username = lpc.normalizePhoneNumber(username);
+        return username.toLowerCase(Locale.getDefault());
+    }
 }

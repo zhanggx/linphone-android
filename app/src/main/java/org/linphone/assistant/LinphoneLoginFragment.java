@@ -17,17 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-import java.util.Locale;
-
-import org.linphone.LinphoneManager;
-import org.linphone.LinphonePreferences;
-import org.linphone.LinphoneUtils;
-import org.linphone.R;
-import org.linphone.compatibility.Compatibility;
-import org.linphone.core.DialPlan;
-import org.linphone.core.LinphoneAccountCreator;
-import org.linphone.core.LinphoneCoreFactory;
-import org.linphone.core.LinphoneProxyConfig;
 
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -36,6 +25,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
@@ -49,353 +39,388 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import java.util.Locale;
+import org.linphone.LinphoneManager;
+import org.linphone.R;
+import org.linphone.core.AccountCreator;
+import org.linphone.core.AccountCreatorListener;
+import org.linphone.core.DialPlan;
+import org.linphone.settings.LinphonePreferences;
+import org.linphone.utils.LinphoneUtils;
 
-public class LinphoneLoginFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, OnClickListener, TextWatcher, LinphoneAccountCreator.LinphoneAccountCreatorListener {
-	private EditText login, password, phoneNumberEdit, dialCode;
-	private Button apply, selectCountry;
-	private CheckBox useUsername;
-	private LinearLayout phoneNumberLayout, usernameLayout, passwordLayout;
-	private TextView forgotPassword, messagePhoneNumber, phoneNumberError;
-	private Boolean recoverAccount;
-	private LinphoneAccountCreator accountCreator;
-	private int countryCode;
-	private String phone, dialcode, username, pwd;
-	private ImageView phoneNumberInfo;
+public class LinphoneLoginFragment extends Fragment
+        implements CompoundButton.OnCheckedChangeListener,
+                OnClickListener,
+                TextWatcher,
+                AccountCreatorListener {
+    private EditText mLogin, mPassword, mPhoneNumberEdit, mDialCode;
+    private Button mApply, mSelectCountry;
+    private CheckBox mUseUsername;
+    private LinearLayout mPhoneNumberLayout, mUsernameLayout, mPasswordLayout;
+    private TextView mForgotPassword, mMessagePhoneNumber, mPhoneNumberError;
+    private AccountCreator mAccountCreator;
+    private int mCountryCode;
+    private String mPhone, mUsername, mPwd;
+    private ImageView mPhoneNumberInfo;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-							 Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.assistant_linphone_login, container, false);
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.assistant_linphone_login, container, false);
 
-		accountCreator = LinphoneCoreFactory.instance().createAccountCreator(LinphoneManager.getLc(), LinphonePreferences.instance().getXmlrpcUrl());
-		accountCreator.setListener(this);
+        mAccountCreator =
+                LinphoneManager.getLc()
+                        .createAccountCreator(LinphonePreferences.instance().getXmlrpcUrl());
+        mAccountCreator.setListener(this);
 
-		String url = "http://linphone.org/free-sip-service.html&action=recover";
+        mLogin = view.findViewById(R.id.assistant_username);
+        mLogin.addTextChangedListener(this);
 
-		login = (EditText) view.findViewById(R.id.assistant_username);
-		login.addTextChangedListener(this);
+        mDialCode = view.findViewById(R.id.dial_code);
 
-		recoverAccount = true;
+        mPhoneNumberEdit = view.findViewById(R.id.phone_number);
+        mPhoneNumberLayout = view.findViewById(R.id.phone_number_layout);
+        mPhoneNumberError = view.findViewById(R.id.phone_number_error_2);
 
-		dialCode = (EditText) view.findViewById(R.id.dial_code);
+        mPhoneNumberInfo = view.findViewById(R.id.info_phone_number);
 
-		phoneNumberEdit = (EditText) view.findViewById(R.id.phone_number);
-		phoneNumberLayout = (LinearLayout) view.findViewById(R.id.phone_number_layout);
-		phoneNumberError = (TextView) view.findViewById(R.id.phone_number_error_2);
+        mUseUsername = view.findViewById(R.id.use_username);
+        mUsernameLayout = view.findViewById(R.id.username_layout);
+        mPasswordLayout = view.findViewById(R.id.password_layout);
+        mPassword = view.findViewById(R.id.assistant_password);
+        mMessagePhoneNumber = view.findViewById(R.id.message_phone_number);
 
-		phoneNumberInfo = (ImageView) view.findViewById(R.id.info_phone_number);
+        mForgotPassword = view.findViewById(R.id.forgot_password);
+        mSelectCountry = view.findViewById(R.id.select_country);
 
-		useUsername = (CheckBox) view.findViewById(R.id.use_username);
-		usernameLayout = (LinearLayout) view.findViewById(R.id.username_layout);
-		passwordLayout = (LinearLayout) view.findViewById(R.id.password_layout);
-		password = (EditText) view.findViewById(R.id.assistant_password);
-		messagePhoneNumber = (TextView) view.findViewById(R.id.message_phone_number);
+        mApply = view.findViewById(R.id.assistant_apply);
+        mApply.setEnabled(true);
+        mApply.setOnClickListener(this);
 
-		forgotPassword = (TextView) view.findViewById(R.id.forgot_password);
-		selectCountry = (Button) view.findViewById(R.id.select_country);
+        // Phone number
+        if (getResources().getBoolean(R.bool.use_phone_number_validation)) {
+            mMessagePhoneNumber.setText(getString(R.string.assistant_create_account_part_1));
+            mPhone = getArguments().getString("Phone");
+            String prefix = getArguments().getString("Dialcode");
 
-		apply = (Button) view.findViewById(R.id.assistant_apply);
-		apply.setEnabled(true);
-		apply.setOnClickListener(this);
+            getActivity().getApplicationContext();
+            // Automatically get the country code from the mPhone
+            TelephonyManager tm =
+                    (TelephonyManager)
+                            getActivity()
+                                    .getApplicationContext()
+                                    .getSystemService(Context.TELEPHONY_SERVICE);
+            String countryIso = tm.getNetworkCountryIso();
+            mCountryCode = org.linphone.core.Utils.getCccFromIso(countryIso.toUpperCase());
 
-		//Phone number
-		if(getResources().getBoolean(R.bool.use_phone_number_validation)){
-			messagePhoneNumber.setText(getString(R.string.assistant_create_account_part_1));
-			phone = getArguments().getString("Phone");
-			dialcode = getArguments().getString("Dialcode");
+            DialPlan c = AssistantActivity.instance().country;
+            if (c != null) {
+                mSelectCountry.setText(c.getCountry());
+                mDialCode.setText(
+                        c.getCountryCallingCode().contains("+")
+                                ? c.getCountryCallingCode()
+                                : "+" + c.getCountryCallingCode());
+            } else {
+                c =
+                        AssistantActivity.instance()
+                                .getCountryListAdapter()
+                                .getCountryFromCountryCode(String.valueOf(mCountryCode));
+                if (c != null) {
+                    mSelectCountry.setText(c.getCountry());
+                    mDialCode.setText(
+                            c.getCountryCallingCode().contains("+")
+                                    ? c.getCountryCallingCode()
+                                    : "+" + c.getCountryCallingCode());
+                }
+            }
 
-			getActivity().getApplicationContext();
-			//Automatically get the country code from the phone
-			TelephonyManager tm =
-					(TelephonyManager) getActivity().getApplicationContext().getSystemService(
-							Context.TELEPHONY_SERVICE);
-			String countryIso = tm.getNetworkCountryIso();
-			LinphoneProxyConfig proxyConfig = LinphoneManager.getLc().createProxyConfig();
-			countryCode = proxyConfig.lookupCCCFromIso(countryIso.toUpperCase());
+            mPhoneNumberLayout.setVisibility(View.VISIBLE);
+            mSelectCountry.setOnClickListener(this);
+            mPhoneNumberInfo.setOnClickListener(this);
 
+            // Allow user to enter a mUsername instead use the mPhone number as mUsername
+            if (getResources().getBoolean(R.bool.assistant_allow_username)) {
+                mUseUsername.setVisibility(View.VISIBLE);
+                mUseUsername.setOnCheckedChangeListener(this);
+            }
 
-			DialPlan c = AssistantActivity.instance().country;
-			if (c != null) {
-				selectCountry.setText(c.getCountryName());
-				dialCode.setText(c.getCountryCallingCode().contains("+") ?
-						c.getCountryCallingCode() : "+" + c.getCountryCallingCode());
-			} else {
-				c = AssistantActivity.instance().getCountryListAdapter()
-						.getCountryFromCountryCode(String.valueOf(countryCode));
-				if (c != null) {
-					selectCountry.setText(c.getCountryName());
-					dialCode.setText(c.getCountryCallingCode().contains("+") ?
-							c.getCountryCallingCode() : "+" + c.getCountryCallingCode());
-				}
-			}
+            if (mPhone != null) mPhoneNumberEdit.setText(mPhone);
+            if (prefix != null) mDialCode.setText("+" + prefix);
+        }
 
-			phoneNumberLayout.setVisibility(View.VISIBLE);
-			selectCountry.setOnClickListener(this);
-			phoneNumberInfo.setOnClickListener(this);
+        if (getResources().getBoolean(R.bool.assistant_allow_username)) {
+            mUseUsername.setVisibility(View.VISIBLE);
+            mUseUsername.setOnCheckedChangeListener(this);
+            mPassword.addTextChangedListener(this);
+            mForgotPassword.setText(
+                    Html.fromHtml(
+                            "<a href=\""
+                                    + getString(R.string.recover_password_link)
+                                    + "\"'>"
+                                    + getString(R.string.forgot_password)
+                                    + "</a>"));
+            mForgotPassword.setMovementMethod(LinkMovementMethod.getInstance());
+        }
 
-			String previousPhone = AssistantActivity.instance().phone_number;
-			if (previousPhone != null ) {
-				phoneNumberEdit.setText(previousPhone);
-			}
+        // Hide mPhone number and display mUsername/email/mPassword
+        if (!getResources().getBoolean(R.bool.use_phone_number_validation)) {
+            mPhoneNumberLayout.setVisibility(View.GONE);
+            mUseUsername.setVisibility(View.GONE);
 
-			//Allow user to enter a username instead use the phone number as username
-			if (getResources().getBoolean(R.bool.assistant_allow_username) ) {
-				useUsername.setVisibility(View.VISIBLE);
-				useUsername.setOnCheckedChangeListener(this);
-			}
+            mUsernameLayout.setVisibility(View.VISIBLE);
+            mPasswordLayout.setVisibility(View.VISIBLE);
+        }
 
-			if (phone != null)
-				phoneNumberEdit.setText(phone);
-			if (dialcode != null)
-				dialCode.setText("+"+dialcode);
-		}
+        // When we come from generic mLogin fragment
+        mUsername = getArguments().getString("Username");
+        mPwd = getArguments().getString("Password");
+        if (mUsername != null && mPwd != null) {
+            mUseUsername.setChecked(true);
+            onCheckedChanged(mUseUsername, true);
+            mLogin.setText(mUsername);
+            mPassword.setText(mPwd);
+        }
 
-		if(getResources().getBoolean(R.bool.assistant_allow_username)) {
-			useUsername.setVisibility(View.VISIBLE);
-			useUsername.setOnCheckedChangeListener(this);
-			password.addTextChangedListener(this);
-			forgotPassword.setText(Compatibility.fromHtml("<a href=\"" + url + "\"'>" + getString(R.string.forgot_password) + "</a>"));
-			forgotPassword.setMovementMethod(LinkMovementMethod.getInstance());
-		}
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mAccountCreator.setLanguage(Locale.getDefault().toLanguageTag());
+        }
 
-		//Hide phone number and display username/email/password
-		if(!getResources().getBoolean(R.bool.use_phone_number_validation)){
-			phoneNumberLayout.setVisibility(View.GONE);
-			useUsername.setVisibility(View.GONE);
+        addPhoneNumberHandler(mDialCode);
+        addPhoneNumberHandler(mPhoneNumberEdit);
 
-			usernameLayout.setVisibility(View.VISIBLE);
-			passwordLayout.setVisibility(View.VISIBLE);
-		}
+        return view;
+    }
 
-		// When we come from generic login fragment
-		username = getArguments().getString("Username");
-		pwd = getArguments().getString("Password");
-		if (username != null && pwd != null) {
-			useUsername.setChecked(true);
-			onCheckedChanged(useUsername, true);
-			login.setText(username);
-			password.setText(pwd);
-		}
+    private void linphoneLogIn() {
+        if (mLogin.getText() == null
+                || mLogin.length() == 0
+                || mPassword.getText() == null
+                || mPassword.length() == 0) {
+            LinphoneUtils.displayErrorAlert(
+                    getString(R.string.first_launch_no_login_password),
+                    AssistantActivity.instance());
+            mApply.setEnabled(true);
+            return;
+        }
+        mAccountCreator.setUsername(mLogin.getText().toString());
+        mAccountCreator.setPassword(mPassword.getText().toString());
+        mAccountCreator.setDomain(getString(R.string.default_domain));
+        mAccountCreator.isAccountExist();
+    }
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			accountCreator.setLanguage(Locale.getDefault().toLanguageTag());
-		}
+    private int getPhoneNumberStatus() {
+        mAccountCreator.setDomain(getString(R.string.default_domain));
+        return mAccountCreator.setPhoneNumber(
+                mPhoneNumberEdit.getText().toString(), LinphoneUtils.getCountryCode(mDialCode));
+    }
 
-		addPhoneNumberHandler(dialCode, null);
-		addPhoneNumberHandler(phoneNumberEdit, null);
+    private void addPhoneNumberHandler(final EditText field) {
+        field.addTextChangedListener(
+                new TextWatcher() {
+                    public void afterTextChanged(Editable s) {
+                        if (field.equals(mDialCode)) {
+                            DialPlan c =
+                                    AssistantActivity.instance()
+                                            .getCountryListAdapter()
+                                            .getCountryFromCountryCode(
+                                                    mDialCode.getText().toString());
+                            if (c != null) {
+                                AssistantActivity.instance().country = c;
+                                mSelectCountry.setText(c.getCountry());
+                            } else {
+                                mSelectCountry.setText(R.string.select_your_country);
+                            }
+                        }
+                    }
 
-		return view;
-	}
+                    public void beforeTextChanged(
+                            CharSequence s, int start, int count, int after) {}
 
-	public void linphoneLogIn() {
-		if (login.getText() == null || login.length() == 0 || password.getText() == null || password.length() == 0) {
-			LinphoneUtils.displayErrorAlert(getString(R.string.first_launch_no_login_password), AssistantActivity.instance());
-			apply.setEnabled(true);
-			return;
-		}
-		accountCreator.setUsername(login.getText().toString());
-		accountCreator.setPassword(password.getText().toString());
-		accountCreator.isAccountUsed();
-	}
+                    public void onTextChanged(CharSequence s, int start, int count, int after) {
+                        onTextChanged2();
+                    }
+                });
+    }
 
-	private int getPhoneNumberStatus() {
-		return accountCreator.setPhoneNumber(phoneNumberEdit.getText().toString(), LinphoneUtils.getCountryCode(dialCode));
-	}
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
 
-	private void addPhoneNumberHandler(final EditText field, final ImageView icon) {
-		field.addTextChangedListener(new TextWatcher() {
-			public void afterTextChanged(Editable s) {
-				if (field.equals(dialCode)) {
-					DialPlan c = AssistantActivity.instance().getCountryListAdapter().getCountryFromCountryCode(dialCode.getText().toString());
-					if (c != null) {
-						AssistantActivity.instance().country = c;
-						selectCountry.setText(c.getCountryName());
-					} else {
-						selectCountry.setText(R.string.select_your_country);
-					}
-				}
-			}
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        if (id == R.id.assistant_apply) {
+            mApply.setEnabled(false);
+            if (mUseUsername == null || !mUseUsername.isChecked()) {
+                recoverAccount();
+            } else {
+                linphoneLogIn();
+            }
+        } else if (id == R.id.info_phone_number) {
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(getString(R.string.phone_number_info_title))
+                    .setMessage(getString(R.string.phone_number_link_info_content))
+                    .show();
+        } else if (id == R.id.select_country) {
+            AssistantActivity.instance().displayCountryChooser();
+        }
+    }
 
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-			}
+    private void recoverAccount() {
+        if (mPhoneNumberEdit.getText().length() > 0 || mDialCode.getText().length() > 1) {
+            int status = getPhoneNumberStatus();
+            boolean isOk = status == AccountCreator.PhoneNumberStatus.Ok.toInt();
+            if (isOk) {
+                mAccountCreator.isAliasUsed();
+            } else {
+                mApply.setEnabled(true);
+                LinphoneUtils.displayErrorAlert(
+                        LinphoneUtils.errorForPhoneNumberStatus(status),
+                        AssistantActivity.instance());
+                LinphoneUtils.displayError(
+                        isOk, mPhoneNumberError, LinphoneUtils.errorForPhoneNumberStatus(status));
+            }
+        } else {
+            mApply.setEnabled(true);
+            LinphoneUtils.displayErrorAlert(
+                    getString(R.string.assistant_create_account_part_1),
+                    AssistantActivity.instance());
+        }
+    }
 
-			public void onTextChanged(CharSequence s, int start, int count, int after) {
-				onTextChanged2();
-			}
-		});
-	}
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-	@Override
-	public void onResume() {
-		super.onResume();
-		if (useUsername != null && useUsername.isChecked())
-			recoverAccount = false;
-		else
-			recoverAccount = true;
-	}
+    private void onTextChanged2() {
+        int status = getPhoneNumberStatus();
+        boolean isOk = status == AccountCreator.PhoneNumberStatus.Ok.toInt();
+        LinphoneUtils.displayError(
+                isOk, mPhoneNumberError, LinphoneUtils.errorForPhoneNumberStatus(status));
+        if (!isOk) {
+            if ((1 == (status & AccountCreator.PhoneNumberStatus.InvalidCountryCode.toInt()))) {
+                mDialCode.setBackgroundResource(R.drawable.resizable_textfield_error);
+                mPhoneNumberEdit.setBackgroundResource(R.drawable.resizable_textfield);
+            } else {
+                mDialCode.setBackgroundResource(R.drawable.resizable_textfield);
+                mPhoneNumberEdit.setBackgroundResource(R.drawable.resizable_textfield_error);
+            }
+        } else {
+            mAccountCreator.setPhoneNumber(
+                    mPhoneNumberEdit.getText().toString(), mDialCode.getText().toString());
+            mDialCode.setBackgroundResource(R.drawable.resizable_textfield);
+            mPhoneNumberEdit.setBackgroundResource(R.drawable.resizable_textfield);
+        }
+    }
 
-	@Override
-	public void onClick(View v) {
-		int id = v.getId();
-		if(id == R.id.assistant_apply){
-			apply.setEnabled(false);
-			if (recoverAccount) {
-				recoverAccount();
-			} else {
-				linphoneLogIn();
-			}
-		}
-		else if(id == R.id.info_phone_number){
-			new AlertDialog.Builder(getActivity())
-					.setTitle(getString(R.string.phone_number_info_title))
-					.setMessage(getString(R.string.phone_number_link_info_content))
-					.show();
-		}
-		else if(id == R.id.select_country){
-			AssistantActivity.instance().displayCountryChooser();
-		}
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        onTextChanged2();
+    }
 
-	}
+    @Override
+    public void afterTextChanged(Editable s) {}
 
-	private void recoverAccount() {
-		if (phoneNumberEdit.length() > 0 || dialCode.length() > 1) {
-			int status = getPhoneNumberStatus();
-			boolean isOk = status == LinphoneAccountCreator.PhoneNumberCheck.Ok.value();
-			if (isOk) {
-				LinphoneManager.getLc().getConfig().loadXmlFile(LinphoneManager.getInstance().getmDynamicConfigFile());
-				accountCreator.isPhoneNumberUsed();
-			} else {
-				apply.setEnabled(true);
-				LinphoneUtils.displayErrorAlert(LinphoneUtils.errorForPhoneNumberStatus(status),
-						AssistantActivity.instance());
-				LinphoneUtils.displayError(isOk, phoneNumberError,
-						LinphoneUtils.errorForPhoneNumberStatus(status));
-			}
-		} else {
-			apply.setEnabled(true);
-			LinphoneUtils.displayErrorAlert(getString(R.string.assistant_create_account_part_1), AssistantActivity.instance());
-		}
-	}
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (buttonView.getId() == R.id.use_username) {
+            if (isChecked) {
+                mUsernameLayout.setVisibility(View.VISIBLE);
+                mPasswordLayout.setVisibility(View.VISIBLE);
+                mPhoneNumberEdit.setVisibility(EditText.GONE);
+                mPhoneNumberLayout.setVisibility(LinearLayout.GONE);
+                mMessagePhoneNumber.setText(getString(R.string.assistant_linphone_login_desc));
+            } else {
+                mUsernameLayout.setVisibility(View.GONE);
+                mPasswordLayout.setVisibility(View.GONE);
+                mPhoneNumberEdit.setVisibility(EditText.VISIBLE);
+                mPhoneNumberLayout.setVisibility(LinearLayout.VISIBLE);
+                mMessagePhoneNumber.setText(getString(R.string.assistant_create_account_part_1));
+            }
+        }
+    }
 
-	@Override
-	public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+    @Override
+    public void onIsAccountExist(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {
+        if (AssistantActivity.instance() == null) {
+            mApply.setEnabled(true);
+            return;
+        }
+        if (status.equals(AccountCreator.Status.AccountExist)
+                || status.equals(AccountCreator.Status.AccountExistWithAlias)) {
+            AssistantActivity.instance().linphoneLogIn(accountCreator);
+        } else {
+            LinphoneUtils.displayErrorAlert(
+                    LinphoneUtils.errorForStatus(status), AssistantActivity.instance());
+        }
+        mApply.setEnabled(true);
+    }
 
-	public void onTextChanged2() {
-		int status = getPhoneNumberStatus();
-		boolean isOk = status == LinphoneAccountCreator.PhoneNumberCheck.Ok.value();
-		LinphoneUtils.displayError(isOk, phoneNumberError, LinphoneUtils.errorForPhoneNumberStatus(status));
-		if (!isOk) {
-			if ((1 == (status & LinphoneAccountCreator.PhoneNumberCheck.CountryCodeInvalid.value()))) {
-				dialCode.setBackgroundResource(R.drawable.resizable_textfield_error);
-				phoneNumberEdit.setBackgroundResource(R.drawable.resizable_textfield);
-			} else {
-				dialCode.setBackgroundResource(R.drawable.resizable_textfield);
-				phoneNumberEdit.setBackgroundResource(R.drawable.resizable_textfield_error);
-			}
-		} else {
-			accountCreator.setPhoneNumber(phoneNumberEdit.getText().toString(), dialCode.getText().toString());
-			dialCode.setBackgroundResource(R.drawable.resizable_textfield);
-			phoneNumberEdit.setBackgroundResource(R.drawable.resizable_textfield);
-		}
-	}
+    @Override
+    public void onCreateAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		onTextChanged2();
-	}
+    @Override
+    public void onActivateAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void afterTextChanged(Editable s) {}
+    @Override
+    public void onLinkAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-		if(buttonView.getId() == R.id.use_username) {
-			if(isChecked) {
-				usernameLayout.setVisibility(View.VISIBLE);
-				passwordLayout.setVisibility(View.VISIBLE);
-				phoneNumberEdit.setVisibility(EditText.GONE);
-				phoneNumberLayout.setVisibility(LinearLayout.GONE);
-				messagePhoneNumber.setText(getString(R.string.assistant_linphone_login_desc));
-				recoverAccount = false;
-			} else {
-				usernameLayout.setVisibility(View.GONE);
-				passwordLayout.setVisibility(View.GONE);
-				phoneNumberEdit.setVisibility(EditText.VISIBLE);
-				phoneNumberLayout.setVisibility(LinearLayout.VISIBLE);
-				messagePhoneNumber.setText(getString(R.string.assistant_create_account_part_1));
-				recoverAccount = true;
-			}
-		}
-	}
+    @Override
+    public void onActivateAlias(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorIsAccountUsed(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-		if (AssistantActivity.instance() == null) {
-			apply.setEnabled(true);
-			return;
-		}
-		if (status.equals(LinphoneAccountCreator.RequestStatus.AccountExist) || status.equals(LinphoneAccountCreator.RequestStatus.AccountExistWithAlias)) {
-			AssistantActivity.instance().linphoneLogIn(accountCreator);
-		} else {
-			LinphoneUtils.displayErrorAlert(LinphoneUtils.errorForRequestStatus(status), AssistantActivity.instance());
-		}
-		apply.setEnabled(true);
-	}
+    @Override
+    public void onIsAccountActivated(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorAccountCreated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
+    @Override
+    public void onRecoverAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {
+        if (AssistantActivity.instance() == null) {
+            mApply.setEnabled(true);
+            return;
+        }
+        if (status.equals(AccountCreator.Status.ServerError)) {
+            LinphoneUtils.displayErrorAlert(
+                    LinphoneUtils.errorForStatus(AccountCreator.Status.RequestFailed),
+                    AssistantActivity.instance());
+            mApply.setEnabled(true);
+        } else {
+            AssistantActivity.instance()
+                    .displayAssistantCodeConfirm(
+                            accountCreator.getUsername(),
+                            mPhoneNumberEdit.getText().toString(),
+                            LinphoneUtils.getCountryCode(mDialCode),
+                            true);
+        }
+    }
 
-	@Override
-	public void onAccountCreatorAccountActivated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
+    @Override
+    public void onIsAccountLinked(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 
-	@Override
-	public void onAccountCreatorAccountLinkedWithPhoneNumber(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
+    @Override
+    public void onIsAliasUsed(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {
+        if (AssistantActivity.instance() == null) {
+            mApply.setEnabled(true);
+            return;
+        }
+        if (status.equals(AccountCreator.Status.AliasIsAccount)
+                || status.equals(AccountCreator.Status.AliasExist)) {
+            accountCreator.recoverAccount();
+        } else {
+            mApply.setEnabled(true);
+            LinphoneUtils.displayErrorAlert(
+                    LinphoneUtils.errorForStatus(status), AssistantActivity.instance());
+        }
+    }
 
-	@Override
-	public void onAccountCreatorPhoneNumberLinkActivated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
-
-	@Override
-	public void onAccountCreatorIsAccountActivated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
-
-	@Override
-	public void onAccountCreatorPhoneAccountRecovered(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-		if (AssistantActivity.instance() == null) {
-			apply.setEnabled(true);
-			return;
-		}
-		if (status.equals(LinphoneAccountCreator.RequestStatus.ErrorServer)) {
-			LinphoneUtils.displayErrorAlert(LinphoneUtils.errorForRequestStatus(LinphoneAccountCreator.RequestStatus.Failed), AssistantActivity.instance());
-			apply.setEnabled(true);
-		} else {
-			AssistantActivity.instance().displayAssistantCodeConfirm(accountCreator.getUsername(), phoneNumberEdit.getText().toString(), LinphoneUtils.getCountryCode(dialCode), true);
-		}
-	}
-
-	@Override
-	public void onAccountCreatorIsAccountLinked(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-	}
-
-	@Override
-	public void onAccountCreatorIsPhoneNumberUsed(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-		if (AssistantActivity.instance() == null) {
-			apply.setEnabled(true);
-			return;
-		}
-		if (status.equals(LinphoneAccountCreator.RequestStatus.AliasIsAccount) || status.equals(LinphoneAccountCreator.RequestStatus.AliasExist)) {
-			accountCreator.recoverPhoneAccount();
-		} else {
-			apply.setEnabled(true);
-			LinphoneUtils.displayErrorAlert(LinphoneUtils.errorForRequestStatus(status), AssistantActivity.instance());
-		}
-	}
-
-	@Override
-	public void onAccountCreatorPasswordUpdated(LinphoneAccountCreator accountCreator, LinphoneAccountCreator.RequestStatus status) {
-
-	}
+    @Override
+    public void onUpdateAccount(
+            AccountCreator accountCreator, AccountCreator.Status status, String resp) {}
 }

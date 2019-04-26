@@ -2,6 +2,7 @@
 <resources>
   <!--Custom-->
   <string name="tunnel_host"></string>
+  <!--Notifications-->
   <!--Common-->
   <string name="username">שם משתמש</string>
   <string name="password">סיסמה</string>
@@ -28,7 +29,7 @@
   <string name="yesterday">אתמול</string>
   <!--Contacts-->
   <!--Chat-->
-  <string name="wait">אנא המתן...</string>
+  <string name="download_file">הורד</string>
   <!--Status Bar-->
   <!--Side Menu-->
   <string name="menu_settings">הגדרות</string>
@@ -39,6 +40,7 @@
   <string name="call_stats_video">וידאו</string>
   <string name="call_stats_codec">קודק:</string>
   <string name="call">קריאה</string>
+  <!--Recordings-->
   <!--About-->
   <!--Service-->
   <!--Errors-->
@@ -84,6 +86,9 @@
   <string name="pref_animation_enable_title">אפשר הנפשות</string>
   <string name="pref_user_name_title">שם משתמש</string>
   <!--Audio hack settings-->
+  <!--Device specifics-->
+  <string name="device_power_saver_dialog_button_go_to_settings">הגדרות</string>
+  <!--Debug popup-->
   <!--Content description-->
   <string name="content_description_back">חזור</string>
   <string name="content_description_decline">דחה</string>

@@ -19,10 +19,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-import java.util.List;
-
-import org.linphone.R;
-
 import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -32,70 +28,71 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import java.util.List;
+import org.linphone.R;
 
-public class InAppPurchaseListFragment extends Fragment implements AdapterView.OnItemClickListener{
-	private ListView inappList;
-	private LayoutInflater mInflater;
-	private List<Purchasable> mPurchasableItems;
+public class InAppPurchaseListFragment extends Fragment implements AdapterView.OnItemClickListener {
+    private ListView mInappList;
+    private LayoutInflater mInflater;
+    private List<Purchasable> mPurchasableItems;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-							 Bundle savedInstanceState) {
-		mInflater = inflater;
-		View view = inflater.inflate(R.layout.in_app_list, container, false);
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        mInflater = inflater;
+        View view = inflater.inflate(R.layout.in_app_list, container, false);
 
-		mPurchasableItems = InAppPurchaseActivity.instance().getPurchasedItems();
-		inappList = (ListView) view.findViewById(R.id.inapp_list);
+        mPurchasableItems = InAppPurchaseActivity.instance().getPurchasedItems();
+        mInappList = view.findViewById(R.id.inapp_list);
 
-		if(mPurchasableItems != null){
-			inappList.setAdapter(new InAppListAdapter());
-			inappList.setOnItemClickListener(this);
-		}
-		return view;
-	}
+        if (mPurchasableItems != null) {
+            mInappList.setAdapter(new InAppListAdapter());
+            mInappList.setOnItemClickListener(this);
+        }
+        return view;
+    }
 
-	class InAppListAdapter extends BaseAdapter {
-		InAppListAdapter() {}
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Purchasable item = (Purchasable) view.getTag();
+        InAppPurchaseActivity.instance().displayPurchase(item);
+    }
 
-		public int getCount() {
-			return mPurchasableItems.size();
-		}
+    class InAppListAdapter extends BaseAdapter {
+        InAppListAdapter() {}
 
-		public Object getItem(int position) {
-			return mPurchasableItems.get(position);
-		}
+        public int getCount() {
+            return mPurchasableItems.size();
+        }
 
-		public long getItemId(int position) {
-			return position;
-		}
+        public Object getItem(int position) {
+            return mPurchasableItems.get(position);
+        }
 
-		public View getView(final int position, View convertView, ViewGroup parent) {
-			View view = null;
-			if (convertView != null) {
-				view = convertView;
-			} else {
-				view = mInflater.inflate(R.layout.in_app_purchase_item, parent, false);
-			}
+        public long getItemId(int position) {
+            return position;
+        }
 
-			final Purchasable item = mPurchasableItems.get(position);
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View view;
+            if (convertView != null) {
+                view = convertView;
+            } else {
+                view = mInflater.inflate(R.layout.in_app_purchase_item, parent, false);
+            }
 
-			TextView itemTitle = (TextView) view.findViewById(R.id.purchase_title);
-			TextView itemDesc = (TextView) view.findViewById(R.id.purchase_description);
-			TextView itemPrice = (TextView) view.findViewById(R.id.purchase_price);
+            final Purchasable item = mPurchasableItems.get(position);
 
-			itemTitle.setText(item.getTitle());
-			itemDesc.setText(item.getDescription());
-			itemPrice.setText(item.getPrice());
+            TextView itemTitle = view.findViewById(R.id.purchase_title);
+            TextView itemDesc = view.findViewById(R.id.purchase_description);
+            TextView itemPrice = view.findViewById(R.id.purchase_price);
 
-			view.setTag(item);
-			return view;
-		}
-	}
+            itemTitle.setText(item.getTitle());
+            itemDesc.setText(item.getDescription());
+            itemPrice.setText(item.getPrice());
 
-
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		Purchasable item = (Purchasable) view.getTag();
-		InAppPurchaseActivity.instance().displayPurchase(item);
-	}
+            view.setTag(item);
+            return view;
+        }
+    }
 }

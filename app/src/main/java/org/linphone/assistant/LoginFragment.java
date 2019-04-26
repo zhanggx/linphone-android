@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-import org.linphone.R;
-import org.linphone.core.LinphoneAddress.TransportType;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -32,74 +30,96 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+import org.linphone.R;
+import org.linphone.core.TransportType;
 
 public class LoginFragment extends Fragment implements OnClickListener, TextWatcher {
-	private EditText login, userid, password, domain, displayName;
-	private RadioGroup transports;
-	private Button apply;
+    private EditText mLogin, mUserid, mPassword, mDomain, mDisplayName;
+    private RadioGroup mTransports;
+    private Button mApply;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.assistant_login, container, false);
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.assistant_login, container, false);
 
-		login = (EditText) view.findViewById(R.id.assistant_username);
-		login.addTextChangedListener(this);
-		displayName = (EditText) view.findViewById(R.id.assistant_display_name);
-		displayName.addTextChangedListener(this);
-		userid = (EditText) view.findViewById(R.id.assistant_userid);
-		userid.addTextChangedListener(this);
-		password = (EditText) view.findViewById(R.id.assistant_password);
-		password.addTextChangedListener(this);
-		domain = (EditText) view.findViewById(R.id.assistant_domain);
-		domain.addTextChangedListener(this);
-		transports = (RadioGroup) view.findViewById(R.id.assistant_transports);
-		apply = (Button) view.findViewById(R.id.assistant_apply);
-		apply.setEnabled(false);
-		apply.setOnClickListener(this);
+        mLogin = view.findViewById(R.id.assistant_username);
+        mLogin.addTextChangedListener(this);
+        mDisplayName = view.findViewById(R.id.assistant_display_name);
+        mDisplayName.addTextChangedListener(this);
+        mUserid = view.findViewById(R.id.assistant_userid);
+        mUserid.addTextChangedListener(this);
+        mPassword = view.findViewById(R.id.assistant_password);
+        mPassword.addTextChangedListener(this);
+        mDomain = view.findViewById(R.id.assistant_domain);
+        mDomain.addTextChangedListener(this);
+        mTransports = view.findViewById(R.id.assistant_transports);
+        mApply = view.findViewById(R.id.assistant_apply);
+        mApply.setEnabled(false);
+        mApply.setOnClickListener(this);
 
-		return view;
-	}
+        return view;
+    }
 
-	@Override
-	public void onClick(View v) {
-		int id = v.getId();
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
 
-		if (id == R.id.assistant_apply) {
-			if (login.getText() == null || login.length() == 0 || password.getText() == null || password.length() == 0 || domain.getText() == null || domain.length() == 0) {
-				Toast.makeText(getActivity(), getString(R.string.first_launch_no_login_password), Toast.LENGTH_LONG).show();
-				return;
-			}
+        if (id == R.id.assistant_apply) {
+            if (mLogin.getText() == null
+                    || mLogin.length() == 0
+                    || mPassword.getText() == null
+                    || mPassword.length() == 0
+                    || mDomain.getText() == null
+                    || mDomain.length() == 0) {
+                Toast.makeText(
+                                getActivity(),
+                                getString(R.string.first_launch_no_login_password),
+                                Toast.LENGTH_LONG)
+                        .show();
+                return;
+            }
 
-			TransportType transport;
-			if(transports.getCheckedRadioButtonId() == R.id.transport_udp){
-				transport = TransportType.LinphoneTransportUdp;
-			} else {
-				if(transports.getCheckedRadioButtonId() == R.id.transport_tcp){
-					transport = TransportType.LinphoneTransportTcp;
-				} else {
-					transport = TransportType.LinphoneTransportTls;
-				}
-			}
+            TransportType transport;
+            if (mTransports.getCheckedRadioButtonId() == R.id.transport_udp) {
+                transport = TransportType.Udp;
+            } else {
+                if (mTransports.getCheckedRadioButtonId() == R.id.transport_tcp) {
+                    transport = TransportType.Tcp;
+                } else {
+                    transport = TransportType.Tls;
+                }
+            }
 
-			if (domain.getText().toString().compareTo(getString(R.string.default_domain)) == 0) {
-				AssistantActivity.instance().displayLoginLinphone(login.getText().toString(), password.getText().toString());
-			} else {
-				AssistantActivity.instance().genericLogIn(login.getText().toString(), userid.getText().toString(), password.getText().toString(), displayName.getText().toString(), null, domain.getText().toString(), transport);
-			}
-		}
-	}
+            if (mDomain.getText().toString().compareTo(getString(R.string.default_domain)) == 0) {
+                AssistantActivity.instance()
+                        .displayLoginLinphone(
+                                mLogin.getText().toString(), mPassword.getText().toString());
+            } else {
+                AssistantActivity.instance()
+                        .genericLogIn(
+                                mLogin.getText().toString(),
+                                mUserid.getText().toString(),
+                                mPassword.getText().toString(),
+                                mDisplayName.getText().toString(),
+                                null,
+                                mDomain.getText().toString(),
+                                transport);
+            }
+        }
+    }
 
-	@Override
-	public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-	@Override
-	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		apply.setEnabled(!login.getText().toString().isEmpty() && !password.getText().toString().isEmpty() && !domain.getText().toString().isEmpty());
-	}
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        mApply.setEnabled(
+                !mLogin.getText().toString().isEmpty()
+                        && !mPassword.getText().toString().isEmpty()
+                        && !mDomain.getText().toString().isEmpty());
+    }
 
-	@Override
-	public void afterTextChanged(Editable s) {
-
-	}
+    @Override
+    public void afterTextChanged(Editable s) {}
 }
