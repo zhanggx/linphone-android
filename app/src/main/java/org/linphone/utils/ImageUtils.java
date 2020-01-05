@@ -1,28 +1,28 @@
-package org.linphone.utils;
-
 /*
-ImageUtils.java
-Copyright (C) 2018  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
@@ -31,12 +31,11 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
-import org.linphone.R;
 
 public class ImageUtils {
 
     public static Bitmap getRoundBitmapFromUri(Context context, Uri fromPictureUri) {
-        Bitmap bm;
+        Bitmap bm = null;
         Bitmap roundBm;
         if (fromPictureUri != null) {
             try {
@@ -44,10 +43,8 @@ public class ImageUtils {
                         MediaStore.Images.Media.getBitmap(
                                 context.getContentResolver(), fromPictureUri);
             } catch (Exception e) {
-                bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.topbar_avatar);
+                return null;
             }
-        } else {
-            bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.topbar_avatar);
         }
         if (bm != null) {
             roundBm = getRoundBitmap(bm);
@@ -59,7 +56,7 @@ public class ImageUtils {
         return bm;
     }
 
-    private static Bitmap getRoundBitmap(Bitmap bitmap) {
+    public static Bitmap getRoundBitmap(Bitmap bitmap) {
         Bitmap output =
                 Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
@@ -88,5 +85,15 @@ public class ImageUtils {
         return pixels
                 / ((float) context.getResources().getDisplayMetrics().densityDpi
                         / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
+    public static Bitmap rotateImage(Bitmap source, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        Bitmap rotatedBitmap =
+                Bitmap.createBitmap(
+                        source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+        source.recycle();
+        return rotatedBitmap;
     }
 }

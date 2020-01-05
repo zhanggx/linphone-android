@@ -1,35 +1,36 @@
-package org.linphone.settings;
-
 /*
-LinphonePreferences.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.settings;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import androidx.appcompat.app.AppCompatDelegate;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import org.linphone.LinphoneActivity;
+import org.linphone.LinphoneContext;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
 import org.linphone.compatibility.Compatibility;
@@ -45,12 +46,19 @@ import org.linphone.core.Transports;
 import org.linphone.core.Tunnel;
 import org.linphone.core.TunnelConfig;
 import org.linphone.core.VideoActivationPolicy;
+import org.linphone.core.VideoDefinition;
 import org.linphone.core.tools.Log;
-import org.linphone.purchase.Purchasable;
+import org.linphone.mediastream.Version;
 import org.linphone.utils.LinphoneUtils;
 
 public class LinphonePreferences {
     private static final int LINPHONE_CORE_RANDOM_PORT = -1;
+    private static final String LINPHONE_DEFAULT_RC = "/.linphonerc";
+    private static final String LINPHONE_FACTORY_RC = "/linphonerc";
+    private static final String LINPHONE_LPCONFIG_XSD = "/lpconfig.xsd";
+    private static final String DEFAULT_ASSISTANT_RC = "/default_assistant_create.rc";
+    private static final String LINPHONE_ASSISTANT_RC = "/linphone_assistant_create.rc";
+
     private static LinphonePreferences sInstance;
 
     private Context mContext;
@@ -67,32 +75,92 @@ public class LinphonePreferences {
         return sInstance;
     }
 
+    public void destroy() {
+        mContext = null;
+        sInstance = null;
+    }
+
     public void setContext(Context c) {
         mContext = c;
         mBasePath = mContext.getFilesDir().getAbsolutePath();
+        try {
+            copyAssetsFromPackage();
+        } catch (IOException ioe) {
+
+        }
+    }
+
+    /* Assets stuff */
+
+    private void copyAssetsFromPackage() throws IOException {
+        copyIfNotExist(R.raw.linphonerc_default, getLinphoneDefaultConfig());
+        copyFromPackage(R.raw.linphonerc_factory, new File(getLinphoneFactoryConfig()).getName());
+        copyIfNotExist(R.raw.lpconfig, mBasePath + LINPHONE_LPCONFIG_XSD);
+        copyFromPackage(
+                R.raw.default_assistant_create,
+                new File(mBasePath + DEFAULT_ASSISTANT_RC).getName());
+        copyFromPackage(
+                R.raw.linphone_assistant_create,
+                new File(mBasePath + LINPHONE_ASSISTANT_RC).getName());
+    }
+
+    private void copyIfNotExist(int ressourceId, String target) throws IOException {
+        File lFileToCopy = new File(target);
+        if (!lFileToCopy.exists()) {
+            copyFromPackage(ressourceId, lFileToCopy.getName());
+        }
+    }
+
+    private void copyFromPackage(int ressourceId, String target) throws IOException {
+        FileOutputStream lOutputStream = mContext.openFileOutput(target, 0);
+        InputStream lInputStream = mContext.getResources().openRawResource(ressourceId);
+        int readByte;
+        byte[] buff = new byte[8048];
+        while ((readByte = lInputStream.read(buff)) != -1) {
+            lOutputStream.write(buff, 0, readByte);
+        }
+        lOutputStream.flush();
+        lOutputStream.close();
+        lInputStream.close();
+    }
+
+    public String getLinphoneDefaultConfig() {
+        return mBasePath + LINPHONE_DEFAULT_RC;
+    }
+
+    public String getLinphoneFactoryConfig() {
+        return mBasePath + LINPHONE_FACTORY_RC;
+    }
+
+    public String getDefaultDynamicConfigFile() {
+        return mBasePath + DEFAULT_ASSISTANT_RC;
+    }
+
+    public String getLinphoneDynamicConfigFile() {
+        return mBasePath + LINPHONE_ASSISTANT_RC;
     }
 
     private String getString(int key) {
-        if (mContext == null && LinphoneManager.isInstanciated()) {
-            mContext = LinphoneManager.getInstance().getContext();
+        if (mContext == null && LinphoneContext.isReady()) {
+            mContext = LinphoneContext.instance().getApplicationContext();
         }
 
         return mContext.getString(key);
     }
 
     private Core getLc() {
-        if (!LinphoneManager.isInstanciated()) return null;
+        if (!LinphoneContext.isReady()) return null;
 
-        return LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+        return LinphoneManager.getCore();
     }
 
     public Config getConfig() {
-        Core lc = getLc();
-        if (lc != null) {
-            return lc.getConfig();
+        Core core = getLc();
+        if (core != null) {
+            return core.getConfig();
         }
 
-        if (!LinphoneManager.isInstanciated()) {
+        if (!LinphoneContext.isReady()) {
             File linphonerc = new File(mBasePath + "/.linphonerc");
             if (linphonerc.exists()) {
                 return Factory.instance().createConfig(linphonerc.getAbsolutePath());
@@ -114,7 +182,7 @@ public class LinphonePreferences {
                 return Factory.instance().createConfigFromString(text.toString());
             }
         } else {
-            return Factory.instance().createConfig(LinphoneManager.getInstance().configFile);
+            return Factory.instance().createConfig(getLinphoneDefaultConfig());
         }
         return null;
     }
@@ -130,7 +198,7 @@ public class LinphonePreferences {
 
     public String getRingtone(String defaultRingtone) {
         String ringtone = getConfig().getString("app", "ringtone", defaultRingtone);
-        if (ringtone == null || ringtone.length() == 0) ringtone = defaultRingtone;
+        if (ringtone == null || ringtone.isEmpty()) ringtone = defaultRingtone;
         return ringtone;
     }
 
@@ -162,26 +230,6 @@ public class LinphonePreferences {
     public String getAccountDomain(int n) {
         ProxyConfig proxyConf = getProxyConfig(n);
         return (proxyConf != null) ? proxyConf.getDomain() : "";
-    }
-
-    public void setPrefix(int n, String prefix) {
-        ProxyConfig prxCfg = getProxyConfig(n);
-        prxCfg.edit();
-        prxCfg.setDialPrefix(prefix);
-        prxCfg.done();
-    }
-
-    public boolean isFriendlistsubscriptionEnabled() {
-        if (getConfig().getBool("app", "friendlist_subscription_enabled", false)) {
-            // Old setting, do migration
-            getConfig().setBool("app", "friendlist_subscription_enabled", false);
-            enabledFriendlistSubscription(true);
-        }
-        return getLc().isFriendListSubscriptionEnabled();
-    }
-
-    public void enabledFriendlistSubscription(boolean enabled) {
-        getLc().enableFriendListSubscription(enabled);
     }
 
     public int getDefaultAccountIndex() {
@@ -232,23 +280,8 @@ public class LinphonePreferences {
         }
     }
 
-    public boolean isAccountEnabled(int n) {
+    private boolean isAccountEnabled(int n) {
         return getProxyConfig(n).registerEnabled();
-    }
-
-    public void resetDefaultProxyConfig() {
-        if (getLc() == null) return;
-        int count = getLc().getProxyConfigList().length;
-        for (int i = 0; i < count; i++) {
-            if (isAccountEnabled(i)) {
-                getLc().setDefaultProxyConfig(getProxyConfig(i));
-                break;
-            }
-        }
-
-        if (getLc().getDefaultProxyConfig() == null) {
-            getLc().setDefaultProxyConfig(getProxyConfig(0));
-        }
     }
     // End of accounts settings
 
@@ -287,11 +320,21 @@ public class LinphonePreferences {
 
     // Video settings
     public boolean useFrontCam() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "front_camera_default", true);
     }
 
     public void setFrontCamAsDefault(boolean frontcam) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "front_camera_default", frontcam);
+    }
+
+    public String getCameraDevice() {
+        return getLc().getVideoDevice();
+    }
+
+    public void setCameraDevice(String device) {
+        getLc().setVideoDevice(device);
     }
 
     public boolean isVideoEnabled() {
@@ -355,7 +398,9 @@ public class LinphonePreferences {
 
     public void setPreferredVideoSize(String preferredVideoSize) {
         if (getLc() == null) return;
-        getLc().setPreferredVideoSizeByName(preferredVideoSize);
+        VideoDefinition preferredVideoDefinition =
+                Factory.instance().createVideoDefinitionFromName(preferredVideoSize);
+        getLc().setPreferredVideoDefinition(preferredVideoDefinition);
     }
 
     public int getPreferredVideoFps() {
@@ -380,12 +425,65 @@ public class LinphonePreferences {
     }
     // End of video settings
 
+    // Contact settings
+    public boolean isFriendlistsubscriptionEnabled() {
+        if (getConfig() == null) return false;
+        if (getConfig().getBool("app", "friendlist_subscription_enabled", false)) {
+            // Old setting, do migration
+            getConfig().setBool("app", "friendlist_subscription_enabled", false);
+            enabledFriendlistSubscription(true);
+        }
+        return getLc().isFriendListSubscriptionEnabled();
+    }
+
+    public void enabledFriendlistSubscription(boolean enabled) {
+        if (getLc() == null) return;
+        getLc().enableFriendListSubscription(enabled);
+    }
+
+    public boolean isPresenceStorageInNativeAndroidContactEnabled() {
+        if (getConfig() == null) return false;
+        return getConfig().getBool("app", "store_presence_in_native_contact", false);
+    }
+
+    public void enabledPresenceStorageInNativeAndroidContact(boolean enabled) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "store_presence_in_native_contact", enabled);
+    }
+
+    public boolean isDisplayContactOrganization() {
+        if (getConfig() == null) return false;
+        return getConfig()
+                .getBool(
+                        "app",
+                        "display_contact_organization",
+                        mContext.getResources().getBoolean(R.bool.display_contact_organization));
+    }
+
+    public void enabledDisplayContactOrganization(boolean enabled) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "display_contact_organization", enabled);
+    }
+    // End of contact settings
+
     // Call settings
+    public boolean isMediaEncryptionMandatory() {
+        if (getLc() == null) return false;
+        return getLc().isMediaEncryptionMandatory();
+    }
+
+    public void setMediaEncryptionMandatory(boolean accept) {
+        if (getLc() == null) return;
+        getLc().setMediaEncryptionMandatory(accept);
+    }
+
     public boolean acceptIncomingEarlyMedia() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("sip", "incoming_calls_early_media", false);
     }
 
     public void setAcceptIncomingEarlyMedia(boolean accept) {
+        if (getConfig() == null) return;
         getConfig().setBool("sip", "incoming_calls_early_media", accept);
     }
 
@@ -420,29 +518,35 @@ public class LinphonePreferences {
     }
 
     public String getVoiceMailUri() {
+        if (getConfig() == null) return null;
         return getConfig().getString("app", "voice_mail", null);
     }
 
     public void setVoiceMailUri(String uri) {
+        if (getConfig() == null) return;
         getConfig().setString("app", "voice_mail", uri);
     }
 
     public boolean getNativeDialerCall() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "native_dialer_call", false);
     }
 
     public void setNativeDialerCall(boolean use) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "native_dialer_call", use);
     }
     // End of call settings
 
     public boolean isWifiOnlyEnabled() {
-        return getConfig().getBool("app", "wifi_only", false);
+        if (getLc() == null) return false;
+        return getLc().wifiOnlyEnabled();
     }
 
     // Network settings
     public void setWifiOnlyEnabled(Boolean enable) {
-        getConfig().setBool("app", "wifi_only", enable);
+        if (getLc() == null) return;
+        getLc().enableWifiOnly(enable);
     }
 
     public void useRandomPort(boolean enabled) {
@@ -450,6 +554,7 @@ public class LinphonePreferences {
     }
 
     private void useRandomPort(boolean enabled, boolean apply) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "random_port", enabled);
         if (apply) {
             if (enabled) {
@@ -461,6 +566,7 @@ public class LinphonePreferences {
     }
 
     public boolean isUsingRandomPort() {
+        if (getConfig() == null) return true;
         return getConfig().getBool("app", "random_port", true);
     }
 
@@ -513,7 +619,7 @@ public class LinphonePreferences {
         if (getLc() == null) return;
         NatPolicy nat = getOrCreateNatPolicy();
         nat.enableIce(enabled);
-        nat.enableStun(enabled);
+        if (enabled) nat.enableStun(true);
         getLc().setNatPolicy(nat);
     }
 
@@ -591,14 +697,16 @@ public class LinphonePreferences {
     }
 
     public boolean isPushNotificationEnabled() {
+        if (getConfig() == null) return true;
         return getConfig().getBool("app", "push_notification", true);
     }
 
     public void setPushNotificationEnabled(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "push_notification", enable);
 
-        Core lc = getLc();
-        if (lc == null) {
+        Core core = getLc();
+        if (core == null) {
             return;
         }
 
@@ -606,8 +714,8 @@ public class LinphonePreferences {
             // Add push infos to exisiting proxy configs
             String regId = getPushNotificationRegistrationID();
             String appId = getString(R.string.gcm_defaultSenderId);
-            if (regId != null && lc.getProxyConfigList().length > 0) {
-                for (ProxyConfig lpc : lc.getProxyConfigList()) {
+            if (regId != null && core.getProxyConfigList().length > 0) {
+                for (ProxyConfig lpc : core.getProxyConfigList()) {
                     if (lpc == null) continue;
                     if (!lpc.isPushNotificationAllowed()) {
                         lpc.edit();
@@ -643,11 +751,11 @@ public class LinphonePreferences {
                 Log.i(
                         "[Push Notification] Refreshing registers to ensure token is up to date: "
                                 + regId);
-                lc.refreshRegisters();
+                core.refreshRegisters();
             }
         } else {
-            if (lc.getProxyConfigList().length > 0) {
-                for (ProxyConfig lpc : lc.getProxyConfigList()) {
+            if (core.getProxyConfigList().length > 0) {
+                for (ProxyConfig lpc : core.getProxyConfigList()) {
                     lpc.edit();
                     lpc.setContactUriParameters(null);
                     lpc.done();
@@ -656,12 +764,13 @@ public class LinphonePreferences {
                                 "[Push Notification] infos removed from proxy config "
                                         + lpc.getIdentityAddress().asStringUriOnly());
                 }
-                lc.refreshRegisters();
+                core.refreshRegisters();
             }
         }
     }
 
     private String getPushNotificationRegistrationID() {
+        if (getConfig() == null) return null;
         return getConfig().getString("app", "push_notification_regid", null);
     }
 
@@ -684,30 +793,36 @@ public class LinphonePreferences {
     // End of network settings
 
     public boolean isDebugEnabled() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "debug", false);
     }
 
     // Advanced settings
     public void setDebugEnabled(boolean enabled) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "debug", enabled);
         LinphoneUtils.configureLoggingService(enabled, mContext.getString(R.string.app_name));
     }
 
     public void setJavaLogger(boolean enabled) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "java_logger", enabled);
         LinphoneUtils.configureLoggingService(
                 isDebugEnabled(), mContext.getString(R.string.app_name));
     }
 
     public boolean useJavaLogger() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "java_logger", false);
     }
 
     public boolean isAutoStartEnabled() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "auto_start", false);
     }
 
     public void setAutoStart(boolean autoStartEnabled) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "auto_start", autoStartEnabled);
     }
 
@@ -721,6 +836,16 @@ public class LinphonePreferences {
         getLc().setFileTransferServer(url);
     }
 
+    public String getLogCollectionUploadServerUrl() {
+        if (getLc() == null) return null;
+        return getLc().getLogCollectionUploadServerUrl();
+    }
+
+    public void setLogCollectionUploadServerUrl(String url) {
+        if (getLc() == null) return;
+        getLc().setLogCollectionUploadServerUrl(url);
+    }
+
     public String getRemoteProvisioningUrl() {
         if (getLc() == null) return null;
         return getLc().getProvisioningUri();
@@ -728,7 +853,7 @@ public class LinphonePreferences {
 
     public void setRemoteProvisioningUrl(String url) {
         if (getLc() == null) return;
-        if (url != null && url.length() == 0) {
+        if (url != null && url.isEmpty()) {
             url = null;
         }
         getLc().setProvisioningUri(url);
@@ -736,24 +861,24 @@ public class LinphonePreferences {
 
     public String getDefaultDisplayName() {
         if (getLc() == null) return null;
-        return getLc().getPrimaryContactParsed().getDisplayName();
+        return getLc().createPrimaryContactParsed().getDisplayName();
     }
 
     public void setDefaultDisplayName(String displayName) {
         if (getLc() == null) return;
-        Address primary = getLc().getPrimaryContactParsed();
+        Address primary = getLc().createPrimaryContactParsed();
         primary.setDisplayName(displayName);
         getLc().setPrimaryContact(primary.asString());
     }
 
     public String getDefaultUsername() {
         if (getLc() == null) return null;
-        return getLc().getPrimaryContactParsed().getUsername();
+        return getLc().createPrimaryContactParsed().getUsername();
     }
 
     public void setDefaultUsername(String username) {
         if (getLc() == null) return;
-        Address primary = getLc().getPrimaryContactParsed();
+        Address primary = getLc().createPrimaryContactParsed();
         primary.setUsername(username);
         getLc().setPrimaryContact(primary.asString());
     }
@@ -764,7 +889,7 @@ public class LinphonePreferences {
         if (getLc().tunnelAvailable()) {
             Tunnel tunnel = getLc().getTunnel();
             if (mTunnelConfig == null) {
-                TunnelConfig servers[] = tunnel.getServers();
+                TunnelConfig[] servers = tunnel.getServers();
                 if (servers.length > 0) {
                     mTunnelConfig = servers[0];
                 } else {
@@ -811,6 +936,53 @@ public class LinphonePreferences {
         }
     }
 
+    public String getTunnelHost2() {
+        TunnelConfig config = getTunnelConfig();
+        if (config != null) {
+            return config.getHost2();
+        } else {
+            return null;
+        }
+    }
+
+    public void setTunnelHost2(String host) {
+        TunnelConfig config = getTunnelConfig();
+        if (config != null) {
+            config.setHost2(host);
+            LinphoneManager.getInstance().initTunnelFromConf();
+        }
+    }
+
+    public int getTunnelPort2() {
+        TunnelConfig config = getTunnelConfig();
+        if (config != null) {
+            return config.getPort2();
+        } else {
+            return -1;
+        }
+    }
+
+    public void setTunnelPort2(int port) {
+        TunnelConfig config = getTunnelConfig();
+        if (config != null) {
+            config.setPort2(port);
+            LinphoneManager.getInstance().initTunnelFromConf();
+        }
+    }
+
+    public void enableTunnelDualMode(boolean enable) {
+        LinphoneManager.getInstance().initTunnelFromConf();
+        getLc().getTunnel().enableDualMode(enable);
+    }
+
+    public boolean isTunnelDualModeEnabled() {
+        Tunnel tunnel = getLc().getTunnel();
+        if (tunnel != null) {
+            return tunnel.dualModeEnabled();
+        }
+        return false;
+    }
+
     public String getTunnelMode() {
         return getConfig().getString("app", "tunnel", null);
     }
@@ -820,24 +992,7 @@ public class LinphonePreferences {
         LinphoneManager.getInstance().initTunnelFromConf();
     }
 
-    public boolean isProvisioningLoginViewEnabled() {
-
-        return (getConfig() != null) && getConfig().getBool("app", "show_login_view", false);
-    }
     // End of tunnel settings
-
-    public void disableProvisioningLoginView() {
-        if (isProvisioningLoginViewEnabled()) { // Only do it if it was previously enabled
-            getConfig().setBool("app", "show_login_view", false);
-        } else {
-            Log.w("Remote provisioning login view wasn't enabled, ignoring");
-        }
-    }
-
-    public boolean isFirstRemoteProvisioning() {
-        return getConfig().getBool("app", "first_remote_provisioning", true);
-    }
-
     public boolean adaptiveRateControlEnabled() {
         if (getLc() == null) return false;
         return getLc().adaptiveRateControlEnabled();
@@ -849,133 +1004,115 @@ public class LinphonePreferences {
     }
 
     public int getCodecBitrateLimit() {
+        if (getConfig() == null) return 36;
         return getConfig().getInt("audio", "codec_bitrate_limit", 36);
     }
 
     public void setCodecBitrateLimit(int bitrate) {
+        if (getConfig() == null) return;
         getConfig().setInt("audio", "codec_bitrate_limit", bitrate);
     }
 
-    public String getInAppPurchaseValidatingServerUrl() {
-        return getConfig().getString("in-app-purchase", "server_url", null);
-    }
-
-    public Purchasable getInAppPurchasedItem() {
-        String id = getConfig().getString("in-app-purchase", "purchase_item_id", null);
-        String payload = getConfig().getString("in-app-purchase", "purchase_item_payload", null);
-        String signature =
-                getConfig().getString("in-app-purchase", "purchase_item_signature", null);
-        String username = getConfig().getString("in-app-purchase", "purchase_item_username", null);
-
-        return new Purchasable(id).setPayloadAndSignature(payload, signature).setUserData(username);
-    }
-
-    public void setInAppPurchasedItem(Purchasable item) {
-        if (item == null) return;
-
-        getConfig().setString("in-app-purchase", "purchase_item_id", item.getId());
-        getConfig().setString("in-app-purchase", "purchase_item_payload", item.getPayload());
-        getConfig()
-                .setString(
-                        "in-app-purchase", "purchase_item_signature", item.getPayloadSignature());
-        getConfig().setString("in-app-purchase", "purchase_item_username", item.getUserData());
-    }
-
-    public ArrayList<String> getInAppPurchasables() {
-        ArrayList<String> purchasables = new ArrayList<>();
-        String list = getConfig().getString("in-app-purchase", "purchasable_items_ids", null);
-        if (list != null) {
-            for (String purchasable : list.split(";")) {
-                if (purchasable.length() > 0) {
-                    purchasables.add(purchasable);
-                }
-            }
-        }
-        return purchasables;
-    }
-
     public String getXmlrpcUrl() {
+        if (getConfig() == null) return null;
         return getConfig().getString("assistant", "xmlrpc_url", null);
     }
 
-    public String getInappPopupTime() {
-        return getConfig().getString("app", "inapp_popup_time", null);
-    }
-
-    public void setInappPopupTime(String date) {
-        getConfig().setString("app", "inapp_popup_time", date);
-    }
-
     public String getLinkPopupTime() {
+        if (getConfig() == null) return null;
         return getConfig().getString("app", "link_popup_time", null);
     }
 
     public void setLinkPopupTime(String date) {
+        if (getConfig() == null) return;
         getConfig().setString("app", "link_popup_time", date);
     }
 
     public boolean isLinkPopupEnabled() {
+        if (getConfig() == null) return true;
         return getConfig().getBool("app", "link_popup_enabled", true);
     }
 
     public void enableLinkPopup(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "link_popup_enabled", enable);
     }
 
+    public boolean isDNDSettingsPopupEnabled() {
+        if (getConfig() == null) return true;
+        return getConfig().getBool("app", "dnd_settings_popup_enabled", true);
+    }
+
+    public void enableDNDSettingsPopup(boolean enable) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "dnd_settings_popup_enabled", enable);
+    }
+
     public boolean isLimeSecurityPopupEnabled() {
+        if (getConfig() == null) return true;
         return getConfig().getBool("app", "lime_security_popup_enabled", true);
     }
 
     public void enableLimeSecurityPopup(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "lime_security_popup_enabled", enable);
     }
 
     public String getDebugPopupAddress() {
+        if (getConfig() == null) return null;
         return getConfig().getString("app", "debug_popup_magic", null);
     }
 
     public String getActivityToLaunchOnIncomingReceived() {
+        if (getConfig() == null) return "org.linphone.call.CallIncomingActivity";
         return getConfig()
                 .getString(
                         "app", "incoming_call_activity", "org.linphone.call.CallIncomingActivity");
     }
 
     public void setActivityToLaunchOnIncomingReceived(String name) {
+        if (getConfig() == null) return;
         getConfig().setString("app", "incoming_call_activity", name);
     }
 
     public boolean getServiceNotificationVisibility() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "show_service_notification", false);
     }
 
     public void setServiceNotificationVisibility(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "show_service_notification", enable);
     }
 
     public String getCheckReleaseUrl() {
+        if (getConfig() == null) return null;
         return getConfig().getString("misc", "version_check_url_root", null);
     }
 
     public int getLastCheckReleaseTimestamp() {
+        if (getConfig() == null) return 0;
         return getConfig().getInt("app", "version_check_url_last_timestamp", 0);
     }
 
     public void setLastCheckReleaseTimestamp(int timestamp) {
+        if (getConfig() == null) return;
         getConfig().setInt("app", "version_check_url_last_timestamp", timestamp);
     }
 
     public boolean isOverlayEnabled() {
+        if (Version.sdkAboveOrEqual(Version.API26_O_80)
+                && mContext.getResources().getBoolean(R.bool.allow_pip_while_video_call)) {
+            // Disable overlay and use PIP feature
+            return false;
+        }
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "display_overlay", false);
     }
 
     public void enableOverlay(boolean enable) {
-        getConfig()
-                .setBool(
-                        "app",
-                        "display_overlay",
-                        enable
-                                && LinphoneActivity.isInstanciated()
-                                && LinphoneActivity.instance().checkAndRequestOverlayPermission());
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "display_overlay", enable);
     }
 
     public boolean isDeviceRingtoneEnabled() {
@@ -984,96 +1121,175 @@ public class LinphonePreferences {
                         .checkPermission(
                                 Manifest.permission.READ_EXTERNAL_STORAGE,
                                 mContext.getPackageName());
+        if (getConfig() == null) return readExternalStorage == PackageManager.PERMISSION_GRANTED;
         return getConfig().getBool("app", "device_ringtone", true)
                 && readExternalStorage == PackageManager.PERMISSION_GRANTED;
     }
 
     public void enableDeviceRingtone(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "device_ringtone", enable);
         LinphoneManager.getInstance().enableDeviceRingtone(enable);
     }
 
     public boolean isIncomingCallVibrationEnabled() {
+        if (getConfig() == null) return true;
         return getConfig().getBool("app", "incoming_call_vibration", true);
     }
 
     public void enableIncomingCallVibration(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "incoming_call_vibration", enable);
     }
 
     public boolean isBisFeatureEnabled() {
+        if (getConfig() == null) return true;
         return getConfig().getBool("app", "bis_feature", true);
     }
 
     public boolean isAutoAnswerEnabled() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "auto_answer", false);
     }
 
     public void enableAutoAnswer(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "auto_answer", enable);
     }
 
     public int getAutoAnswerTime() {
+        if (getConfig() == null) return 0;
         return getConfig().getInt("app", "auto_answer_delay", 0);
     }
 
     public void setAutoAnswerTime(int time) {
+        if (getConfig() == null) return;
         getConfig().setInt("app", "auto_answer_delay", time);
     }
 
-    public int getCodeLength() {
-        return getConfig().getInt("app", "activation_code_length", 0);
-    }
-
     public void disableFriendsStorage() {
+        if (getConfig() == null) return;
         getConfig().setBool("misc", "store_friends", false);
     }
 
     public boolean useBasicChatRoomFor1To1() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "prefer_basic_chat_room", false);
     }
 
     // 0 is download all, -1 is disable feature, else size is bytes
     public int getAutoDownloadFileMaxSize() {
+        if (getLc() == null) return -1;
         return getLc().getMaxSizeForAutoDownloadIncomingFiles();
     }
 
     // 0 is download all, -1 is disable feature, else size is bytes
     public void setAutoDownloadFileMaxSize(int size) {
+        if (getLc() == null) return;
         getLc().setMaxSizeForAutoDownloadIncomingFiles(size);
     }
 
     public boolean hasPowerSaverDialogBeenPrompted() {
+        if (getConfig() == null) return false;
         return getConfig().getBool("app", "android_power_saver_dialog", false);
     }
 
     public void powerSaverDialogPrompted(boolean b) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "android_power_saver_dialog", b);
     }
 
     public boolean isDarkModeEnabled() {
         if (getConfig() == null) return false;
-        return getConfig()
-                .getBool(
-                        "app",
-                        "dark_mode",
-                        AppCompatDelegate.getDefaultNightMode()
-                                == AppCompatDelegate.MODE_NIGHT_YES);
+        if (!mContext.getResources().getBoolean(R.bool.allow_dark_mode)) return false;
+
+        boolean useNightModeDefault =
+                AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
+        if (mContext != null) {
+            int nightMode =
+                    mContext.getResources().getConfiguration().uiMode
+                            & Configuration.UI_MODE_NIGHT_MASK;
+            if (nightMode == Configuration.UI_MODE_NIGHT_YES) {
+                useNightModeDefault = true;
+            }
+        }
+
+        return getConfig().getBool("app", "dark_mode", useNightModeDefault);
     }
 
     public void enableDarkMode(boolean enable) {
+        if (getConfig() == null) return;
         getConfig().setBool("app", "dark_mode", enable);
-        if (LinphoneActivity.isInstanciated()) {
-            LinphoneActivity.instance().recreate();
-        }
     }
 
     public String getDeviceName(Context context) {
         String defaultValue = Compatibility.getDeviceName(context);
+        if (getConfig() == null) return defaultValue;
         return getConfig().getString("app", "device_name", defaultValue);
     }
 
     public void setDeviceName(String name) {
+        if (getConfig() == null) return;
         getConfig().setString("app", "device_name", name);
+    }
+
+    public boolean isEchoCancellationCalibrationDone() {
+        if (getConfig() == null) return false;
+        return getConfig().getBool("app", "echo_cancellation_calibration_done", false);
+    }
+
+    public void setEchoCancellationCalibrationDone(boolean done) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "echo_cancellation_calibration_done", done);
+    }
+
+    public boolean isOpenH264CodecDownloadEnabled() {
+        if (getConfig() == null) return true;
+        return getConfig().getBool("app", "open_h264_download_enabled", true);
+    }
+
+    public void setOpenH264CodecDownloadEnabled(boolean enable) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "open_h264_download_enabled", enable);
+    }
+
+    public boolean isVideoPreviewEnabled() {
+        if (getConfig() == null) return false;
+        return isVideoEnabled() && getConfig().getBool("app", "video_preview", false);
+    }
+
+    public void setVideoPreviewEnabled(boolean enabled) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "video_preview", enabled);
+    }
+
+    public boolean shortcutsCreationEnabled() {
+        if (getConfig() == null) return false;
+        return getConfig().getBool("app", "shortcuts", false);
+    }
+
+    public void enableChatRoomsShortcuts(boolean enable) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "shortcuts", enable);
+    }
+
+    public boolean hideEmptyChatRooms() {
+        if (getConfig() == null) return true;
+        return getConfig().getBool("misc", "hide_empty_chat_rooms", true);
+    }
+
+    public void setHideEmptyChatRooms(boolean hide) {
+        if (getConfig() == null) return;
+        getConfig().setBool("misc", "hide_empty_chat_rooms", hide);
+    }
+
+    public boolean hideRemovedProxiesChatRooms() {
+        if (getConfig() == null) return true;
+        return getConfig().getBool("misc", "hide_chat_rooms_from_removed_proxies", true);
+    }
+
+    public void setHideRemovedProxiesChatRooms(boolean hide) {
+        if (getConfig() == null) return;
+        getConfig().setBool("misc", "hide_chat_rooms_from_removed_proxies", hide);
     }
 }

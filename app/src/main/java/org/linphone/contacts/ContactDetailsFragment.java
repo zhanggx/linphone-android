@@ -1,23 +1,23 @@
-package org.linphone.contacts;
-
 /*
-ContactDetailsFragment.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.contacts;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
@@ -34,9 +34,9 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
-import org.linphone.LinphoneActivity;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
+import org.linphone.contacts.views.ContactAvatar;
 import org.linphone.core.Address;
 import org.linphone.core.ChatRoom;
 import org.linphone.core.ChatRoomBackend;
@@ -49,15 +49,11 @@ import org.linphone.core.PresenceBasicStatus;
 import org.linphone.core.PresenceModel;
 import org.linphone.core.ProxyConfig;
 import org.linphone.core.tools.Log;
-import org.linphone.fragments.FragmentsAvailable;
 import org.linphone.settings.LinphonePreferences;
 import org.linphone.utils.LinphoneUtils;
-import org.linphone.views.ContactAvatar;
 
-public class ContactDetailsFragment extends Fragment
-        implements OnClickListener, ContactsUpdatedListener {
+public class ContactDetailsFragment extends Fragment implements ContactsUpdatedListener {
     private LinphoneContact mContact;
-    private ImageView mEditContact, mDeleteContact, mBack;
     private TextView mOrganization;
     private RelativeLayout mWaitLayout;
     private LayoutInflater mInflater;
@@ -66,89 +62,16 @@ public class ContactDetailsFragment extends Fragment
     private ChatRoom mChatRoom;
     private ChatRoomListenerStub mChatRoomCreationListener;
 
-    private final OnClickListener mDialListener =
-            new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (LinphoneActivity.isInstanciated()) {
-                        String tag = (String) v.getTag();
-                        LinphoneActivity.instance()
-                                .setAddresGoToDialerAndCall(tag, mContact.getFullName());
-                    }
-                }
-            };
-
-    private final OnClickListener mChatListener =
-            new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (LinphoneActivity.isInstanciated()) {
-                        String tag = (String) v.getTag();
-                        Core lc = LinphoneManager.getLc();
-                        Address participant = Factory.instance().createAddress(tag);
-                        ProxyConfig defaultProxyConfig = lc.getDefaultProxyConfig();
-                        boolean isSecured = v.getId() == R.id.contact_chat_secured;
-
-                        if (defaultProxyConfig != null) {
-                            ChatRoom room =
-                                    lc.findOneToOneChatRoom(
-                                            defaultProxyConfig.getContact(),
-                                            participant,
-                                            isSecured);
-                            if (room != null) {
-                                LinphoneActivity.instance()
-                                        .goToChat(
-                                                room.getLocalAddress().asStringUriOnly(),
-                                                room.getPeerAddress().asStringUriOnly(),
-                                                null);
-                            } else {
-                                if (defaultProxyConfig.getConferenceFactoryUri() != null
-                                        && (isSecured
-                                                || !LinphonePreferences.instance()
-                                                        .useBasicChatRoomFor1To1())) {
-                                    mWaitLayout.setVisibility(View.VISIBLE);
-
-                                    ChatRoomParams params = lc.createDefaultChatRoomParams();
-                                    params.enableEncryption(isSecured);
-                                    params.enableGroup(false);
-                                    // We don't want a basic chat room,
-                                    // so if isSecured is false we have to set this manually
-                                    params.setBackend(ChatRoomBackend.FlexisipChat);
-
-                                    Address participants[] = new Address[1];
-                                    participants[0] = participant;
-
-                                    mChatRoom =
-                                            lc.createChatRoom(
-                                                    params,
-                                                    getString(R.string.dummy_group_chat_subject),
-                                                    participants);
-                                    if (mChatRoom != null) {
-                                        mChatRoom.addListener(mChatRoomCreationListener);
-                                    } else {
-                                        Log.w(
-                                                "[Contact Details Fragment] createChatRoom returned null...");
-                                        mWaitLayout.setVisibility(View.GONE);
-                                    }
-                                } else {
-                                    room = lc.getChatRoom(participant);
-                                    LinphoneActivity.instance()
-                                            .goToChat(
-                                                    room.getLocalAddress().asStringUriOnly(),
-                                                    room.getPeerAddress().asStringUriOnly(),
-                                                    null);
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContact = (LinphoneContact) getArguments().getSerializable("Contact");
+        if (mContact == null) {
+            if (savedInstanceState != null) {
+                mContact = (LinphoneContact) savedInstanceState.get("Contact");
+            }
+        }
 
-        this.mInflater = inflater;
+        mInflater = inflater;
         mView = inflater.inflate(R.layout.contact, container, false);
 
         if (getArguments() != null) {
@@ -158,27 +81,67 @@ public class ContactDetailsFragment extends Fragment
         mWaitLayout = mView.findViewById(R.id.waitScreen);
         mWaitLayout.setVisibility(View.GONE);
 
-        mEditContact = mView.findViewById(R.id.editContact);
-        mEditContact.setOnClickListener(this);
+        ImageView editContact = mView.findViewById(R.id.editContact);
+        editContact.setOnClickListener(
+                new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ((ContactsActivity) getActivity()).showContactEdit(mContact);
+                    }
+                });
 
-        mDeleteContact = mView.findViewById(R.id.deleteContact);
-        mDeleteContact.setOnClickListener(this);
+        if (mContact != null
+                && getResources().getBoolean(R.bool.forbid_pure_linphone_contacts_edition)) {
+            editContact.setVisibility(mContact.isAndroidContact() ? View.VISIBLE : View.GONE);
+        }
+
+        ImageView deleteContact = mView.findViewById(R.id.deleteContact);
+        deleteContact.setOnClickListener(
+                new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        final Dialog dialog =
+                                ((ContactsActivity) getActivity())
+                                        .displayDialog(getString(R.string.delete_text));
+                        Button delete = dialog.findViewById(R.id.dialog_delete_button);
+                        Button cancel = dialog.findViewById(R.id.dialog_cancel_button);
+
+                        delete.setOnClickListener(
+                                new OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        mContact.delete();
+                                        // To ensure removed contact won't appear in the contacts
+                                        // list anymore
+                                        ContactsManager.getInstance().fetchContactsAsync();
+                                        ((ContactsActivity) getActivity()).goBack();
+                                        dialog.dismiss();
+                                    }
+                                });
+
+                        cancel.setOnClickListener(
+                                new OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        dialog.show();
+                    }
+                });
 
         mOrganization = mView.findViewById(R.id.contactOrganization);
-        boolean isOrgVisible = getResources().getBoolean(R.bool.display_contact_organization);
-        String org = mContact.getOrganization();
-        if (org != null && !org.isEmpty() && isOrgVisible) {
-            mOrganization.setText(org);
-        } else {
-            mOrganization.setVisibility(View.GONE);
-        }
 
-        mBack = mView.findViewById(R.id.back);
-        if (getResources().getBoolean(R.bool.isTablet)) {
-            mBack.setVisibility(View.INVISIBLE);
-        } else {
-            mBack.setOnClickListener(this);
-        }
+        ImageView back = mView.findViewById(R.id.back);
+        back.setOnClickListener(
+                new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ((ContactsActivity) getActivity()).goBack();
+                    }
+                });
+        back.setVisibility(
+                getResources().getBoolean(R.bool.isTablet) ? View.INVISIBLE : View.VISIBLE);
 
         mChatRoomCreationListener =
                 new ChatRoomListenerStub() {
@@ -186,14 +149,11 @@ public class ContactDetailsFragment extends Fragment
                     public void onStateChanged(ChatRoom cr, ChatRoom.State newState) {
                         if (newState == ChatRoom.State.Created) {
                             mWaitLayout.setVisibility(View.GONE);
-                            LinphoneActivity.instance()
-                                    .goToChat(
-                                            cr.getLocalAddress().asStringUriOnly(),
-                                            cr.getPeerAddress().asStringUriOnly(),
-                                            null);
+                            ((ContactsActivity) getActivity())
+                                    .showChatRoom(cr.getLocalAddress(), cr.getPeerAddress());
                         } else if (newState == ChatRoom.State.CreationFailed) {
                             mWaitLayout.setVisibility(View.GONE);
-                            LinphoneActivity.instance().displayChatRoomError();
+                            ((ContactsActivity) getActivity()).displayChatRoomError();
                             Log.e(
                                     "Group chat room for address "
                                             + cr.getPeerAddress()
@@ -205,14 +165,57 @@ public class ContactDetailsFragment extends Fragment
         return mView;
     }
 
-    public void changeDisplayedContact(LinphoneContact newContact) {
+    @Override
+    public void onContactsUpdated() {
+        LinphoneContact contact =
+                ContactsManager.getInstance().findContactFromAndroidId(mContact.getAndroidId());
+        if (contact != null) {
+            changeDisplayedContact(contact);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        ContactsManager.getInstance().addContactsListener(this);
+        displayContact(mInflater, mView);
+    }
+
+    @Override
+    public void onPause() {
+        if (mChatRoom != null) {
+            mChatRoom.removeListener(mChatRoomCreationListener);
+        }
+        ContactsManager.getInstance().removeContactsListener(this);
+        super.onPause();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("Contact", mContact);
+    }
+
+    private void changeDisplayedContact(LinphoneContact newContact) {
         mContact = newContact;
         displayContact(mInflater, mView);
     }
 
     @SuppressLint("InflateParams")
     private void displayContact(LayoutInflater inflater, View view) {
+        if (mContact == null) return;
         ContactAvatar.displayAvatar(mContact, view.findViewById(R.id.avatar_layout));
+
+        boolean isOrgVisible = LinphonePreferences.instance().isDisplayContactOrganization();
+        if (mContact != null
+                && mContact.getOrganization() != null
+                && !mContact.getOrganization().isEmpty()
+                && isOrgVisible) {
+            mOrganization.setText(mContact.getOrganization());
+        } else {
+            mOrganization.setVisibility(View.GONE);
+        }
 
         TextView contactName = view.findViewById(R.id.contact_name);
         contactName.setText(mContact.getFullName());
@@ -222,8 +225,8 @@ public class ContactDetailsFragment extends Fragment
         TableLayout controls = view.findViewById(R.id.controls);
         controls.removeAllViews();
         for (LinphoneNumberOrAddress noa : mContact.getNumbersOrAddresses()) {
-            boolean skip = false;
-            View v = inflater.inflate(R.layout.contact_control_row, null);
+            boolean skip;
+            View v = inflater.inflate(R.layout.contact_control_cell, null);
 
             String value = noa.getValue();
             String displayedNumberOrAddress = value;
@@ -235,17 +238,17 @@ public class ContactDetailsFragment extends Fragment
             TextView label = v.findViewById(R.id.address_label);
             if (noa.isSIPAddress()) {
                 label.setText(R.string.sip_address);
-                skip |= getResources().getBoolean(R.bool.hide_contact_sip_addresses);
+                skip = getResources().getBoolean(R.bool.hide_contact_sip_addresses);
             } else {
                 label.setText(R.string.phone_number);
-                skip |= getResources().getBoolean(R.bool.hide_contact_phone_numbers);
+                skip = getResources().getBoolean(R.bool.hide_contact_phone_numbers);
             }
 
             TextView tv = v.findViewById(R.id.numeroOrAddress);
             tv.setText(displayedNumberOrAddress);
             tv.setSelected(true);
 
-            ProxyConfig lpc = LinphoneManager.getLc().getDefaultProxyConfig();
+            ProxyConfig lpc = LinphoneManager.getCore().getDefaultProxyConfig();
             if (lpc != null) {
                 String username = lpc.normalizePhoneNumber(displayedNumberOrAddress);
                 if (username != null) {
@@ -293,8 +296,17 @@ public class ContactDetailsFragment extends Fragment
             }
 
             String contactAddress = mContact.getContactFromPresenceModelForUriOrTel(noa.getValue());
+
             if (!mDisplayChatAddressOnly) {
-                v.findViewById(R.id.contact_call).setOnClickListener(mDialListener);
+                v.findViewById(R.id.contact_call)
+                        .setOnClickListener(
+                                new OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        String tag = (String) v.getTag();
+                                        LinphoneManager.getCallManager().newOutgoingCall(tag, null);
+                                    }
+                                });
                 if (contactAddress != null) {
                     v.findViewById(R.id.contact_call).setTag(contactAddress);
                 } else {
@@ -304,8 +316,22 @@ public class ContactDetailsFragment extends Fragment
                 v.findViewById(R.id.contact_call).setVisibility(View.GONE);
             }
 
-            v.findViewById(R.id.contact_chat).setOnClickListener(mChatListener);
-            v.findViewById(R.id.contact_chat_secured).setOnClickListener(mChatListener);
+            v.findViewById(R.id.contact_chat)
+                    .setOnClickListener(
+                            new OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    goToChat((String) v.getTag(), false);
+                                }
+                            });
+            v.findViewById(R.id.contact_chat_secured)
+                    .setOnClickListener(
+                            new OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    goToChat((String) v.getTag(), true);
+                                }
+                            });
             if (contactAddress != null) {
                 v.findViewById(R.id.contact_chat).setTag(contactAddress);
                 v.findViewById(R.id.contact_chat_secured).setTag(contactAddress);
@@ -322,6 +348,9 @@ public class ContactDetailsFragment extends Fragment
                 v.findViewById(R.id.contact_chat_secured).setVisibility(View.GONE);
             }
 
+            if (getResources().getBoolean(R.bool.force_end_to_end_encryption_in_chat)) {
+                v.findViewById(R.id.contact_chat).setVisibility(View.GONE);
+            }
             if (getResources().getBoolean(R.bool.disable_chat)) {
                 v.findViewById(R.id.contact_chat).setVisibility(View.GONE);
                 v.findViewById(R.id.contact_chat_secured).setVisibility(View.GONE);
@@ -333,69 +362,67 @@ public class ContactDetailsFragment extends Fragment
         }
     }
 
-    @Override
-    public void onContactsUpdated() {
-        LinphoneContact contact =
-                ContactsManager.getInstance().findContactFromAndroidId(mContact.getAndroidId());
-        if (contact != null) {
-            changeDisplayedContact(contact);
-        }
-    }
+    private void goToChat(String tag, boolean isSecured) {
+        Core core = LinphoneManager.getCore();
+        if (core == null) return;
 
-    @Override
-    public void onResume() {
-        super.onResume();
+        Address participant = Factory.instance().createAddress(tag);
+        ProxyConfig defaultProxyConfig = core.getDefaultProxyConfig();
 
-        ContactsManager.getInstance().addContactsListener(this);
-        if (LinphoneActivity.isInstanciated()) {
-            LinphoneActivity.instance().selectMenu(FragmentsAvailable.CONTACT_DETAIL);
-        }
-        displayContact(mInflater, mView);
-    }
+        if (defaultProxyConfig != null) {
+            ChatRoom room =
+                    core.findOneToOneChatRoom(
+                            defaultProxyConfig.getContact(), participant, isSecured);
+            if (room != null) {
+                ((ContactsActivity) getActivity())
+                        .showChatRoom(room.getLocalAddress(), room.getPeerAddress());
+            } else {
+                if (defaultProxyConfig.getConferenceFactoryUri() != null
+                        && (isSecured
+                                || !LinphonePreferences.instance().useBasicChatRoomFor1To1())) {
+                    mWaitLayout.setVisibility(View.VISIBLE);
 
-    @Override
-    public void onPause() {
-        if (mChatRoom != null) {
-            mChatRoom.removeListener(mChatRoomCreationListener);
-        }
-        ContactsManager.getInstance().removeContactsListener(this);
-        super.onPause();
-    }
+                    ChatRoomParams params = core.createDefaultChatRoomParams();
+                    params.enableEncryption(isSecured);
+                    params.enableGroup(false);
+                    // We don't want a basic chat room,
+                    // so if isSecured is false we have to set this manually
+                    params.setBackend(ChatRoomBackend.FlexisipChat);
 
-    @Override
-    public void onClick(View v) {
-        int id = v.getId();
+                    Address[] participants = new Address[1];
+                    participants[0] = participant;
 
-        if (id == R.id.editContact) {
-            ContactsManager.getInstance().editContact(getActivity(), mContact, null);
-        } else if (id == R.id.deleteContact) {
-            final Dialog dialog =
-                    LinphoneActivity.instance().displayDialog(getString(R.string.delete_text));
-            Button delete = dialog.findViewById(R.id.dialog_delete_button);
-            Button cancel = dialog.findViewById(R.id.dialog_cancel_button);
+                    mChatRoom =
+                            core.createChatRoom(
+                                    params,
+                                    getString(R.string.dummy_group_chat_subject),
+                                    participants);
+                    if (mChatRoom != null) {
+                        mChatRoom.addListener(mChatRoomCreationListener);
+                    } else {
+                        Log.w("[Contact Details Fragment] createChatRoom returned null...");
+                        mWaitLayout.setVisibility(View.GONE);
+                    }
+                } else {
+                    room = core.getChatRoom(participant);
+                    if (room != null) {
+                        ((ContactsActivity) getActivity())
+                                .showChatRoom(room.getLocalAddress(), room.getPeerAddress());
+                    }
+                }
+            }
+        } else {
+            if (isSecured) {
+                Log.e(
+                        "[Contact Details Fragment] Can't create a secured chat room without proxy config");
+                return;
+            }
 
-            delete.setOnClickListener(
-                    new OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            mContact.delete();
-                            // To ensure removed contact won't appear in the contacts list anymore
-                            ContactsManager.getInstance().fetchContactsAsync();
-                            LinphoneActivity.instance().displayContacts(false);
-                            dialog.dismiss();
-                        }
-                    });
-
-            cancel.setOnClickListener(
-                    new OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            dialog.dismiss();
-                        }
-                    });
-            dialog.show();
-        } else if (id == R.id.back) {
-            getFragmentManager().popBackStackImmediate();
+            ChatRoom room = core.getChatRoom(participant);
+            if (room != null) {
+                ((ContactsActivity) getActivity())
+                        .showChatRoom(room.getLocalAddress(), room.getPeerAddress());
+            }
         }
     }
 }

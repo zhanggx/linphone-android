@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?attr/backgroundColor">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -64,7 +63,6 @@
                 android:paddingTop="20dp">
 
                 <RelativeLayout
-                    android:id="@+id/avatar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center">
@@ -78,16 +76,16 @@
                     style="@style/big_contact_name_font"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:maxLines="1" />
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center" />
 
-                <TextView
+                <org.linphone.views.MarqueeTextView
                     android:id="@+id/contactOrganization"
                     style="@style/contact_organization_font"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:maxLines="1" />
+                    android:singleLine="true" />
 
                 <TableLayout
                     android:id="@+id/controls"

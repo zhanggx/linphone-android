@@ -1,23 +1,23 @@
-package org.linphone.notifications;
-
 /*
-NotificationBroadcastReceiver.java
-Copyright (C) 2018  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.notifications;
 
 import android.app.Notification;
 import android.app.RemoteInput;
@@ -25,15 +25,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import org.linphone.LinphoneActivity;
+import org.linphone.LinphoneContext;
 import org.linphone.LinphoneManager;
-import org.linphone.LinphoneService;
 import org.linphone.R;
 import org.linphone.compatibility.Compatibility;
 import org.linphone.core.Address;
 import org.linphone.core.Call;
 import org.linphone.core.ChatMessage;
-import org.linphone.core.ChatMessageListenerStub;
 import org.linphone.core.ChatRoom;
 import org.linphone.core.Core;
 import org.linphone.core.tools.Log;
@@ -47,11 +45,11 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver {
         if (intent.getAction().equals(Compatibility.INTENT_REPLY_NOTIF_ACTION)
                 || intent.getAction().equals(Compatibility.INTENT_MARK_AS_READ_ACTION)) {
             String remoteSipAddr =
-                    LinphoneService.instance()
+                    LinphoneContext.instance()
                             .getNotificationManager()
                             .getSipUriForNotificationId(notifId);
 
-            Core core = LinphoneManager.getLc();
+            Core core = LinphoneManager.getCore();
             if (core == null) {
                 Log.e("[Notification Broadcast Receiver] Couldn't get Core instance");
                 onError(context, notifId);
@@ -88,10 +86,6 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver {
             }
 
             room.markAsRead();
-            if (LinphoneActivity.isInstanciated()) {
-                LinphoneActivity.instance()
-                        .displayMissedChats(LinphoneManager.getInstance().getUnreadMessageCount());
-            }
 
             if (intent.getAction().equals(Compatibility.INTENT_REPLY_NOTIF_ACTION)) {
                 final String reply = getMessageText(intent).toString();
@@ -102,36 +96,22 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver {
                 }
 
                 ChatMessage msg = room.createMessage(reply);
-                msg.send();
+                msg.setUserData(notifId);
                 msg.addListener(
-                        new ChatMessageListenerStub() {
-                            @Override
-                            public void onMsgStateChanged(
-                                    ChatMessage msg, ChatMessage.State state) {
-                                if (state == ChatMessage.State.Delivered) {
-                                    Notification replied =
-                                            Compatibility.createRepliedNotification(context, reply);
-                                    LinphoneService.instance()
-                                            .getNotificationManager()
-                                            .sendNotification(notifId, replied);
-                                } else if (state == ChatMessage.State.NotDelivered) {
-                                    Log.e(
-                                            "[Notification Broadcast Receiver] Couldn't send reply, message is not delivered");
-                                    onError(context, notifId);
-                                }
-                            }
-                        });
+                        LinphoneContext.instance().getNotificationManager().getMessageListener());
+                msg.send();
+                Log.i("[Notification Broadcast Receiver] Reply sent for notif id " + notifId);
             } else {
-                LinphoneService.instance().getNotificationManager().dismissNotification(notifId);
+                LinphoneContext.instance().getNotificationManager().dismissNotification(notifId);
             }
         } else if (intent.getAction().equals(Compatibility.INTENT_ANSWER_CALL_NOTIF_ACTION)
                 || intent.getAction().equals(Compatibility.INTENT_HANGUP_CALL_NOTIF_ACTION)) {
             String remoteAddr =
-                    LinphoneService.instance()
+                    LinphoneContext.instance()
                             .getNotificationManager()
                             .getSipUriForCallNotificationId(notifId);
 
-            Core core = LinphoneManager.getLc();
+            Core core = LinphoneManager.getCore();
             if (core == null) {
                 Log.e("[Notification Broadcast Receiver] Couldn't get Core instance");
                 return;
@@ -155,7 +135,7 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver {
     private void onError(Context context, int notifId) {
         Notification replyError =
                 Compatibility.createRepliedNotification(context, context.getString(R.string.error));
-        LinphoneService.instance().getNotificationManager().sendNotification(notifId, replyError);
+        LinphoneContext.instance().getNotificationManager().sendNotification(notifId, replyError);
     }
 
     private CharSequence getMessageText(Intent intent) {

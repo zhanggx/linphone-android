@@ -1,23 +1,23 @@
-package org.linphone.contacts;
-
 /*
-ContactsAdapter.java
-Copyright (C) 2018  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.contacts;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -31,9 +31,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.linphone.R;
+import org.linphone.contacts.views.ContactAvatar;
+import org.linphone.settings.LinphonePreferences;
 import org.linphone.utils.SelectableAdapter;
 import org.linphone.utils.SelectableHelper;
-import org.linphone.views.ContactAvatar;
 
 public class ContactsAdapter extends SelectableAdapter<ContactViewHolder>
         implements SectionIndexer {
@@ -79,17 +80,15 @@ public class ContactsAdapter extends SelectableAdapter<ContactViewHolder>
         }
         holder.separator.setVisibility(
                 mIsSearchMode
-                                || (!mIsSearchMode
-                                        && getPositionForSection(getSectionForPosition(position))
-                                                != position)
+                                || (getPositionForSection(getSectionForPosition(position))
+                                        != position)
                         ? View.GONE
                         : View.VISIBLE);
         holder.linphoneFriend.setVisibility(contact.isInFriendList() ? View.VISIBLE : View.GONE);
 
         ContactAvatar.displayAvatar(contact, holder.avatarLayout);
 
-        boolean isOrgVisible =
-                mContext.getResources().getBoolean(R.bool.display_contact_organization);
+        boolean isOrgVisible = LinphonePreferences.instance().isDisplayContactOrganization();
         String org = contact.getOrganization();
         if (org != null && !org.isEmpty() && isOrgVisible) {
             holder.organization.setText(org);

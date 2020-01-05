@@ -1,23 +1,23 @@
-package org.linphone.settings.widget;
-
 /*
-BasicSetting.java
-Copyright (C) 2019 Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.settings.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -31,44 +31,43 @@ import androidx.annotation.Nullable;
 import org.linphone.R;
 
 public class BasicSetting extends LinearLayout {
-    protected Context mContext;
     protected View mView;
-    protected TextView mTitle, mSubtitle;
     protected SettingListener mListener;
+
+    private TextView mTitle;
+    private TextView mSubtitle;
 
     public BasicSetting(Context context) {
         super(context);
-        mContext = context;
         init(null, 0, 0);
     }
 
     public BasicSetting(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        mContext = context;
         init(attrs, 0, 0);
     }
 
     public BasicSetting(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mContext = context;
         init(attrs, defStyleAttr, 0);
     }
 
-    public BasicSetting(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    BasicSetting(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        mContext = context;
         init(attrs, defStyleAttr, defStyleRes);
     }
 
-    protected void inflateView() {
-        mView = LayoutInflater.from(mContext).inflate(R.layout.settings_widget_basic, this, true);
+    void inflateView() {
+        mView =
+                LayoutInflater.from(getContext())
+                        .inflate(R.layout.settings_widget_basic, this, true);
     }
 
     public void setListener(SettingListener listener) {
         mListener = listener;
     }
 
-    protected void init(@Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    void init(@Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         inflateView();
 
         mTitle = mView.findViewById(R.id.setting_title);
@@ -87,7 +86,8 @@ public class BasicSetting extends LinearLayout {
 
         if (attrs != null) {
             TypedArray a =
-                    mContext.getTheme()
+                    getContext()
+                            .getTheme()
                             .obtainStyledAttributes(
                                     attrs, R.styleable.Settings, defStyleAttr, defStyleRes);
             try {

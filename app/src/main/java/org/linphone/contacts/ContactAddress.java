@@ -1,23 +1,23 @@
-package org.linphone.contacts;
-
 /*
-ContactAddress.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.contacts;
 
 import android.view.View;
 import java.io.Serializable;
@@ -29,17 +29,15 @@ public class ContactAddress implements Serializable {
     private LinphoneContact mContact;
     private String mAddress;
     private String mPhoneNumber;
-    private boolean mIsLinphoneContact;
-    private boolean mIsSelect = false;
     private boolean mIsAdmin = false;
     private transient View mView;
 
-    public ContactAddress(LinphoneContact c, String a, String pn, boolean isLC) {
-        init(c, a, pn, isLC);
+    public ContactAddress(LinphoneContact c, String a, String pn) {
+        init(c, a, pn);
     }
 
-    public ContactAddress(LinphoneContact c, String a, String pn, boolean isLC, boolean isAdmin) {
-        init(c, a, pn, isLC);
+    public ContactAddress(LinphoneContact c, String a, String pn, boolean isAdmin) {
+        init(c, a, pn);
         mIsAdmin = isAdmin;
     }
 
@@ -49,14 +47,6 @@ public class ContactAddress implements Serializable {
 
     public void setAdmin(boolean admin) {
         mIsAdmin = admin;
-    }
-
-    public boolean isSelect() {
-        return mIsSelect;
-    }
-
-    public void setSelect(boolean select) {
-        mIsSelect = select;
     }
 
     public View getView() {
@@ -122,11 +112,10 @@ public class ContactAddress implements Serializable {
         return mContact != null && mContact.hasFriendCapability(capability);
     }
 
-    private void init(LinphoneContact c, String a, String pn, boolean isLC) {
+    private void init(LinphoneContact c, String a, String pn) {
         mContact = c;
         mAddress = a;
         mPhoneNumber = pn;
-        mIsLinphoneContact = isLC;
     }
 
     @Override

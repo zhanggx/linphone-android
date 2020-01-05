@@ -6,7 +6,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/backgroundColor"
         android:orientation="vertical">
 
         <LinearLayout
@@ -63,7 +62,7 @@
                 android:src="@drawable/delete" />
         </LinearLayout>
 
-        <include layout="@layout/edit_list" />
+        <include layout="@layout/edit_list" android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/chatList"

@@ -1,26 +1,28 @@
-package org.linphone.compatibility;
 /*
-Compatibility.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.compatibility;
 
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ContentProviderClient;
@@ -29,7 +31,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.provider.Settings;
-import android.widget.TextView;
+import android.service.notification.StatusBarNotification;
+import org.linphone.core.Address;
 import org.linphone.mediastream.Version;
 import org.linphone.notifications.Notifiable;
 
@@ -73,14 +76,6 @@ public class Compatibility {
         return ApiTwentyOnePlus.createSimpleNotification(context, title, text, intent);
     }
 
-    public static Notification createMissedCallNotification(
-            Context context, String title, String text, PendingIntent intent) {
-        if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
-            return ApiTwentySixPlus.createMissedCallNotification(context, title, text, intent);
-        }
-        return ApiTwentyOnePlus.createMissedCallNotification(context, title, text, intent);
-    }
-
     public static Notification createMessageNotification(
             Context context,
             Notifiable notif,
@@ -88,7 +83,7 @@ public class Compatibility {
             String msg,
             Bitmap contactIcon,
             PendingIntent intent) {
-        if (Version.sdkAboveOrEqual(28)) {
+        if (Version.sdkAboveOrEqual(Version.API28_PIE_90)) {
             return ApiTwentyEightPlus.createMessageNotification(
                     context, notif, contactIcon, intent);
         } else if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
@@ -109,10 +104,18 @@ public class Compatibility {
         return null;
     }
 
+    public static Notification createMissedCallNotification(
+            Context context, String title, String text, PendingIntent intent, int count) {
+        if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
+            return ApiTwentySixPlus.createMissedCallNotification(
+                    context, title, text, intent, count);
+        }
+        return ApiTwentyOnePlus.createMissedCallNotification(context, title, text, intent, count);
+    }
+
     public static Notification createInCallNotification(
             Context context,
             int callId,
-            boolean showAnswerAction,
             String msg,
             int iconID,
             Bitmap contactIcon,
@@ -120,27 +123,31 @@ public class Compatibility {
             PendingIntent intent) {
         if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
             return ApiTwentySixPlus.createInCallNotification(
-                    context,
-                    callId,
-                    showAnswerAction,
-                    msg,
-                    iconID,
-                    contactIcon,
-                    contactName,
-                    intent);
+                    context, callId, msg, iconID, contactIcon, contactName, intent);
         } else if (Version.sdkAboveOrEqual(Version.API24_NOUGAT_70)) {
             return ApiTwentyFourPlus.createInCallNotification(
-                    context,
-                    callId,
-                    showAnswerAction,
-                    msg,
-                    iconID,
-                    contactIcon,
-                    contactName,
-                    intent);
+                    context, callId, msg, iconID, contactIcon, contactName, intent);
         }
         return ApiTwentyOnePlus.createInCallNotification(
                 context, msg, iconID, contactIcon, contactName, intent);
+    }
+
+    public static Notification createIncomingCallNotification(
+            Context context,
+            int callId,
+            Bitmap contactIcon,
+            String contactName,
+            String sipUri,
+            PendingIntent intent) {
+        if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
+            return ApiTwentySixPlus.createIncomingCallNotification(
+                    context, callId, contactIcon, contactName, sipUri, intent);
+        } else if (Version.sdkAboveOrEqual(Version.API24_NOUGAT_70)) {
+            return ApiTwentyFourPlus.createIncomingCallNotification(
+                    context, callId, contactIcon, contactName, sipUri, intent);
+        }
+        return ApiTwentyOnePlus.createIncomingCallNotification(
+                context, contactIcon, contactName, sipUri, intent);
     }
 
     public static Notification createNotification(
@@ -151,13 +158,14 @@ public class Compatibility {
             int iconLevel,
             Bitmap largeIcon,
             PendingIntent intent,
-            int priority) {
+            int priority,
+            boolean ongoing) {
         if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
             return ApiTwentySixPlus.createNotification(
-                    context, title, message, icon, iconLevel, largeIcon, intent, priority);
+                    context, title, message, icon, iconLevel, largeIcon, intent, priority, ongoing);
         }
         return ApiTwentyOnePlus.createNotification(
-                context, title, message, icon, iconLevel, largeIcon, intent, priority);
+                context, title, message, icon, iconLevel, largeIcon, intent, priority, ongoing);
     }
 
     public static boolean canDrawOverlays(Context context) {
@@ -165,14 +173,6 @@ public class Compatibility {
             return Settings.canDrawOverlays(context);
         }
         return true;
-    }
-
-    public static void setTextAppearance(TextView textview, Context context, int style) {
-        if (Version.sdkAboveOrEqual(Version.API23_MARSHMALLOW_60)) {
-            ApiTwentyThreePlus.setTextAppearance(textview, style);
-        } else {
-            textview.setTextAppearance(context, style);
-        }
     }
 
     public static void startService(Context context, Intent intent) {
@@ -236,5 +236,87 @@ public class Compatibility {
         if (Version.sdkStrictlyBelow(Version.API27_OREO_81)) {
             ApiTwentyOnePlus.setTurnScreenOn(activity, enable);
         }
+    }
+
+    public static boolean isDoNotDisturbSettingsAccessGranted(Context context) {
+        if (Version.sdkAboveOrEqual(Version.API23_MARSHMALLOW_60)) {
+            return ApiTwentyThreePlus.isDoNotDisturbSettingsAccessGranted(context);
+        }
+        return true;
+    }
+
+    public static boolean isDoNotDisturbPolicyAllowingRinging(
+            Context context, Address remoteAddress) {
+        if (Version.sdkAboveOrEqual(Version.API23_MARSHMALLOW_60)) {
+            return ApiTwentyThreePlus.isDoNotDisturbPolicyAllowingRinging(context, remoteAddress);
+        }
+        return true;
+    }
+
+    public static void createChatShortcuts(Context context) {
+        if (Version.sdkAboveOrEqual(Version.API25_NOUGAT_71)) {
+            ApiTwentyFivePlus.createChatShortcuts(context);
+        }
+    }
+
+    public static void removeChatShortcuts(Context context) {
+        if (Version.sdkAboveOrEqual(Version.API25_NOUGAT_71)) {
+            ApiTwentyFivePlus.removeChatShortcuts(context);
+        }
+    }
+
+    public static void enterPipMode(Activity activity) {
+        if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
+            ApiTwentySixPlus.enterPipMode(activity);
+        }
+    }
+
+    public static Notification.Action getReplyMessageAction(Context context, Notifiable notif) {
+        if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            return ApiTwentyNinePlus.getReplyMessageAction(context, notif);
+        } else if (Version.sdkAboveOrEqual(Version.API28_PIE_90)) {
+            return ApiTwentyEightPlus.getReplyMessageAction(context, notif);
+        } else if (Version.sdkAboveOrEqual(Version.API24_NOUGAT_70)) {
+            return ApiTwentyFourPlus.getReplyMessageAction(context, notif);
+        }
+        return null;
+    }
+
+    public static Notification.Action getMarkMessageAsReadAction(
+            Context context, Notifiable notif) {
+        if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            return ApiTwentyNinePlus.getMarkMessageAsReadAction(context, notif);
+        } else if (Version.sdkAboveOrEqual(Version.API28_PIE_90)) {
+            return ApiTwentyEightPlus.getMarkMessageAsReadAction(context, notif);
+        } else if (Version.sdkAboveOrEqual(Version.API24_NOUGAT_70)) {
+            return ApiTwentyFourPlus.getMarkMessageAsReadAction(context, notif);
+        }
+        return null;
+    }
+
+    public static Notification.Action getCallAnswerAction(Context context, int callId) {
+        if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            return ApiTwentyNinePlus.getCallAnswerAction(context, callId);
+        } else if (Version.sdkAboveOrEqual(Version.API24_NOUGAT_70)) {
+            return ApiTwentyFourPlus.getCallAnswerAction(context, callId);
+        }
+        return null;
+    }
+
+    public static Notification.Action getCallDeclineAction(Context context, int callId) {
+        if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
+            return ApiTwentyNinePlus.getCallDeclineAction(context, callId);
+        } else if (Version.sdkAboveOrEqual(Version.API24_NOUGAT_70)) {
+            return ApiTwentyFourPlus.getCallDeclineAction(context, callId);
+        }
+        return null;
+    }
+
+    public static StatusBarNotification[] getActiveNotifications(NotificationManager manager) {
+        if (Version.sdkAboveOrEqual(Version.API23_MARSHMALLOW_60)) {
+            return ApiTwentyThreePlus.getActiveNotifications(manager);
+        }
+
+        return new StatusBarNotification[0];
     }
 }

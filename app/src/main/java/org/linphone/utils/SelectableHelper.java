@@ -1,21 +1,22 @@
 /*
-SelectableHelper.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 package org.linphone.utils;
 
@@ -26,7 +27,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import androidx.recyclerview.widget.RecyclerView;
-import org.linphone.LinphoneActivity;
 import org.linphone.R;
 
 public class SelectableHelper {
@@ -34,7 +34,6 @@ public class SelectableHelper {
     private final ImageView mSelectAllButton;
     private final ImageView mDeselectAllButton;
     private final ImageView mDeleteSelectionButton;
-    private final ImageView mCancelButton;
     private final LinearLayout mEditTopBar;
     private final LinearLayout mTopBar;
     private SelectableAdapter<RecyclerView.ViewHolder> mAdapter;
@@ -49,8 +48,8 @@ public class SelectableHelper {
         mEditTopBar = view.findViewById(R.id.edit_list);
         mTopBar = view.findViewById(R.id.top_bar);
 
-        mCancelButton = view.findViewById(R.id.cancel);
-        mCancelButton.setOnClickListener(
+        ImageView cancelButton = view.findViewById(R.id.cancel);
+        cancelButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -99,9 +98,9 @@ public class SelectableHelper {
                     @Override
                     public void onClick(View v) {
                         final Dialog dialog =
-                                LinphoneActivity.instance()
-                                        .displayDialog(
-                                                mContext.getString(mDialogDeleteMessageResourceId));
+                                LinphoneUtils.getDialog(
+                                        mContext,
+                                        mContext.getString(mDialogDeleteMessageResourceId));
                         Button delete = dialog.findViewById(R.id.dialog_delete_button);
                         Button cancel = dialog.findViewById(R.id.dialog_cancel_button);
 
@@ -179,7 +178,7 @@ public class SelectableHelper {
     }
 
     private Object[] getSelectedObjects() {
-        Object objects[] = new Object[mAdapter.getSelectedItemCount()];
+        Object[] objects = new Object[mAdapter.getSelectedItemCount()];
         int index = 0;
         for (Integer i : mAdapter.getSelectedItems()) {
             objects[index] = mAdapter.getItem(i);

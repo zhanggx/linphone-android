@@ -1,28 +1,29 @@
+/*
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.linphone.utils;
 
-/*
-LinphoneUtils.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
@@ -30,27 +31,23 @@ import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.Spanned;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.core.content.ContextCompat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import org.linphone.LinphoneContext;
 import org.linphone.LinphoneManager;
-import org.linphone.LinphoneService;
 import org.linphone.R;
-import org.linphone.core.AccountCreator;
 import org.linphone.core.Address;
 import org.linphone.core.Call;
-import org.linphone.core.Call.State;
-import org.linphone.core.ChatRoom;
-import org.linphone.core.ChatRoomCapabilities;
+import org.linphone.core.CallLog;
 import org.linphone.core.Core;
 import org.linphone.core.Factory;
 import org.linphone.core.LogCollectionState;
@@ -60,7 +57,6 @@ import org.linphone.settings.LinphonePreferences;
 
 /** Helpers. */
 public final class LinphoneUtils {
-    private static Context sContext = null;
     private static final Handler sHandler = new Handler(Looper.getMainLooper());
 
     private LinphoneUtils() {}
@@ -74,16 +70,16 @@ public final class LinphoneUtils {
             Factory.instance()
                     .enableLogCollection(LogCollectionState.EnabledWithoutPreviousLogHandler);
             if (isDebugEnabled) {
-                if (LinphoneService.isReady()) {
+                if (LinphoneContext.isReady()) {
                     Factory.instance()
                             .getLoggingService()
-                            .addListener(LinphoneService.instance().getJavaLoggingService());
+                            .addListener(LinphoneContext.instance().getJavaLoggingService());
                 }
             } else {
-                if (LinphoneService.isReady()) {
+                if (LinphoneContext.isReady()) {
                     Factory.instance()
                             .getLoggingService()
-                            .removeListener(LinphoneService.instance().getJavaLoggingService());
+                            .removeListener(LinphoneContext.instance().getJavaLoggingService());
                 }
             }
         }
@@ -93,10 +89,13 @@ public final class LinphoneUtils {
         sHandler.post(r);
     }
 
-    // private static final String sipAddressRegExp =
-    // "^(sip:)?(\\+)?[a-z0-9]+([_\\.-][a-z0-9]+)*@([a-z0-9]+([\\.-][a-z0-9]+)*)+\\.[a-z]{2,}(:[0-9]{2,5})?$";
-    // private static final String strictSipAddressRegExp =
-    // "^sip:(\\+)?[a-z0-9]+([_\\.-][a-z0-9]+)*@([a-z0-9]+([\\.-][a-z0-9]+)*)+\\.[a-z]{2,}$";
+    public static void dispatchOnUIThreadAfter(Runnable r, long after) {
+        sHandler.postDelayed(r, after);
+    }
+
+    public static void removeFromUIThreadDispatcher(Runnable r) {
+        sHandler.removeCallbacks(r);
+    }
 
     private static boolean isSipAddress(String numberOrAddress) {
         Factory.instance().createAddress(numberOrAddress);
@@ -104,7 +103,7 @@ public final class LinphoneUtils {
     }
 
     public static boolean isNumberAddress(String numberOrAddress) {
-        ProxyConfig proxy = LinphoneManager.getLc().createProxyConfig();
+        ProxyConfig proxy = LinphoneManager.getCore().createProxyConfig();
         return proxy.normalizePhoneNumber(numberOrAddress) != null;
     }
 
@@ -133,24 +132,6 @@ public final class LinphoneUtils {
             displayName = address.asStringUriOnly();
         }
         return displayName;
-    }
-
-    public static String getUsernameFromAddress(String address) {
-        if (address.contains("sip:")) address = address.replace("sip:", "");
-
-        if (address.contains("@")) address = address.split("@")[0];
-
-        return address;
-    }
-
-    public static boolean onKeyBackGoHome(Activity activity, int keyCode, KeyEvent event) {
-        if (!(keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0)) {
-            return false; // continue
-        }
-
-        activity.startActivity(
-                new Intent().setAction(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME));
-        return true;
     }
 
     public static String timestampToHumanDate(Context context, long timestamp, int format) {
@@ -190,28 +171,6 @@ public final class LinphoneUtils {
         return (cal1.get(Calendar.ERA) == cal2.get(Calendar.ERA)
                 && cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)
                 && cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR));
-    }
-
-    public static boolean onKeyVolumeAdjust(int keyCode) {
-        if (!LinphoneService.isReady()) {
-            Log.i("Couldn't change softvolume has service is not running");
-            return true;
-        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            LinphoneManager.getInstance().adjustVolume(1);
-        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            LinphoneManager.getInstance().adjustVolume(-1);
-        }
-        return true;
-    }
-
-    public static List<Call> getCallsInState(Core lc, Collection<State> states) {
-        List<Call> foundCalls = new ArrayList<>();
-        for (Call call : lc.getCalls()) {
-            if (states.contains(call.getState())) {
-                foundCalls.add(call);
-            }
-        }
-        return foundCalls;
     }
 
     private static boolean isCallRunning(Call call) {
@@ -263,10 +222,20 @@ public final class LinphoneUtils {
         return true;
     }
 
+    public static void reloadVideoDevices() {
+        Core core = LinphoneManager.getCore();
+        if (core == null) return;
+
+        Log.i("[Utils] Reloading camera devices");
+        core.reloadVideoDevices();
+
+        LinphoneManager.getInstance().resetCameraFromPreferences();
+    }
+
     public static String getDisplayableUsernameFromAddress(String sipAddress) {
         String username = sipAddress;
-        Core lc = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
-        if (lc == null) return username;
+        Core core = LinphoneManager.getCore();
+        if (core == null) return username;
 
         if (username.startsWith("sip:")) {
             username = username.substring(4);
@@ -274,15 +243,15 @@ public final class LinphoneUtils {
 
         if (username.contains("@")) {
             String domain = username.split("@")[1];
-            ProxyConfig lpc = lc.getDefaultProxyConfig();
+            ProxyConfig lpc = core.getDefaultProxyConfig();
             if (lpc != null) {
                 if (domain.equals(lpc.getDomain())) {
                     return username.split("@")[0];
                 }
             } else {
                 if (domain.equals(
-                        LinphoneManager.getInstance()
-                                .getContext()
+                        LinphoneContext.instance()
+                                .getApplicationContext()
                                 .getString(R.string.default_domain))) {
                     return username.split("@")[0];
                 }
@@ -293,133 +262,27 @@ public final class LinphoneUtils {
 
     public static String getFullAddressFromUsername(String username) {
         String sipAddress = username;
-        Core lc = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
-        if (lc == null || username == null) return sipAddress;
+        Core core = LinphoneManager.getCore();
+        if (core == null || username == null) return sipAddress;
 
         if (!sipAddress.startsWith("sip:")) {
             sipAddress = "sip:" + sipAddress;
         }
 
         if (!sipAddress.contains("@")) {
-            ProxyConfig lpc = lc.getDefaultProxyConfig();
+            ProxyConfig lpc = core.getDefaultProxyConfig();
             if (lpc != null) {
                 sipAddress = sipAddress + "@" + lpc.getDomain();
             } else {
                 sipAddress =
                         sipAddress
                                 + "@"
-                                + LinphoneManager.getInstance()
-                                        .getContext()
+                                + LinphoneContext.instance()
+                                        .getApplicationContext()
                                         .getString(R.string.default_domain);
             }
         }
         return sipAddress;
-    }
-
-    public static void displayError(boolean isOk, TextView error, String errorText) {
-        if (isOk) {
-            error.setVisibility(View.INVISIBLE);
-            error.setText("");
-        } else {
-            error.setVisibility(View.VISIBLE);
-            error.setText(errorText);
-        }
-    }
-
-    public static String errorForPhoneNumberStatus(int status) {
-        Context ctxt = getContext();
-        if (ctxt != null) {
-            if (AccountCreator.PhoneNumberStatus.InvalidCountryCode.toInt()
-                    == (status & AccountCreator.PhoneNumberStatus.InvalidCountryCode.toInt()))
-                return ctxt.getString(R.string.country_code_invalid);
-            if (AccountCreator.PhoneNumberStatus.TooShort.toInt()
-                    == (status & AccountCreator.PhoneNumberStatus.TooShort.toInt()))
-                return ctxt.getString(R.string.phone_number_too_short);
-            if (AccountCreator.PhoneNumberStatus.TooLong.toInt()
-                    == (status & AccountCreator.PhoneNumberStatus.TooLong.toInt()))
-                return ctxt.getString(R.string.phone_number_too_long);
-            if (AccountCreator.PhoneNumberStatus.Invalid.toInt()
-                    == (status & AccountCreator.PhoneNumberStatus.Invalid.toInt()))
-                return ctxt.getString(R.string.phone_number_invalid);
-        }
-        return null;
-    }
-
-    public static String errorForEmailStatus(AccountCreator.EmailStatus status) {
-        Context ctxt = getContext();
-        if (ctxt != null) {
-            if (status.equals(AccountCreator.EmailStatus.InvalidCharacters)
-                    || status.equals(AccountCreator.EmailStatus.Malformed))
-                return ctxt.getString(R.string.invalid_email);
-        }
-        return null;
-    }
-
-    public static String errorForUsernameStatus(AccountCreator.UsernameStatus status) {
-        Context ctxt = getContext();
-        if (ctxt != null) {
-            if (status.equals(AccountCreator.UsernameStatus.InvalidCharacters))
-                return ctxt.getString(R.string.invalid_username);
-            if (status.equals(AccountCreator.UsernameStatus.TooShort))
-                return ctxt.getString(R.string.username_too_short);
-            if (status.equals(AccountCreator.UsernameStatus.TooLong))
-                return ctxt.getString(R.string.username_too_long);
-            if (status.equals(AccountCreator.UsernameStatus.Invalid))
-                return ctxt.getString(R.string.username_invalid_size);
-            if (status.equals(AccountCreator.UsernameStatus.InvalidCharacters))
-                return ctxt.getString(R.string.invalid_display_name);
-        }
-        return null;
-    }
-
-    public static String errorForPasswordStatus(AccountCreator.PasswordStatus status) {
-        Context ctxt = getContext();
-        if (ctxt != null) {
-            if (status.equals(AccountCreator.PasswordStatus.TooShort))
-                return ctxt.getString(R.string.password_too_short);
-            if (status.equals(AccountCreator.PasswordStatus.TooLong))
-                return ctxt.getString(R.string.password_too_long);
-        }
-        return null;
-    }
-
-    public static String errorForStatus(AccountCreator.Status status) {
-        Context ctxt = getContext();
-        Log.e("Status error " + status.name());
-        if (ctxt != null) {
-            if (status.equals(AccountCreator.Status.RequestFailed))
-                return ctxt.getString(R.string.request_failed);
-            if (status.equals(AccountCreator.Status.ServerError))
-                return ctxt.getString(R.string.wizard_failed);
-            if (status.equals(AccountCreator.Status.AccountExist)
-                    || status.equals(AccountCreator.Status.AccountExistWithAlias))
-                return ctxt.getString(R.string.account_already_exist);
-            if (status.equals(AccountCreator.Status.AliasIsAccount)
-                    || status.equals(AccountCreator.Status.AliasExist))
-                return ctxt.getString(R.string.assistant_phone_number_unavailable);
-            if (status.equals(AccountCreator.Status.AccountNotExist))
-                return ctxt.getString(R.string.assistant_error_bad_credentials);
-            if (status.equals(AccountCreator.Status.AliasNotExist))
-                return ctxt.getString(R.string.phone_number_not_exist);
-            if (status.equals(AccountCreator.Status.AliasNotExist)
-                    || status.equals(AccountCreator.Status.AccountNotActivated)
-                    || status.equals(AccountCreator.Status.AccountAlreadyActivated)
-                    || status.equals(AccountCreator.Status.AccountActivated)
-                    || status.equals(AccountCreator.Status.AccountNotCreated)
-                    || status.equals(AccountCreator.Status.RequestOk)) return "";
-        }
-        return null;
-    }
-
-    public static String getCountryCode(EditText dialCode) {
-        if (dialCode != null) {
-            String code = dialCode.getText().toString();
-            if (code != null && code.startsWith("+")) {
-                code = code.substring(1);
-            }
-            return code;
-        }
-        return null;
     }
 
     public static void displayErrorAlert(String msg, Context ctxt) {
@@ -474,32 +337,77 @@ public final class LinphoneUtils {
         return Html.fromHtml(text);
     }
 
-    public static void hideKeyboard(Activity activity) {
-        InputMethodManager imm =
-                (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
-        View view = activity.getCurrentFocus();
-        if (view == null) {
-            view = new View(activity);
-        }
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    public static void showTrustDeniedDialog(Context context) {
+        final Dialog dialog = new Dialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        Drawable d = new ColorDrawable(ContextCompat.getColor(context, R.color.dark_grey_color));
+        d.setAlpha(200);
+        dialog.setContentView(R.layout.dialog);
+        dialog.getWindow()
+                .setLayout(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT);
+        dialog.getWindow().setBackgroundDrawable(d);
+
+        TextView title = dialog.findViewById(R.id.dialog_title);
+        title.setVisibility(View.GONE);
+
+        TextView message = dialog.findViewById(R.id.dialog_message);
+        message.setVisibility(View.VISIBLE);
+        message.setText(context.getString(R.string.trust_denied));
+
+        ImageView icon = dialog.findViewById(R.id.dialog_icon);
+        icon.setVisibility(View.VISIBLE);
+        icon.setImageResource(R.drawable.security_alert_indicator);
+
+        Button delete = dialog.findViewById(R.id.dialog_delete_button);
+        delete.setVisibility(View.GONE);
+        Button cancel = dialog.findViewById(R.id.dialog_cancel_button);
+        cancel.setVisibility(View.VISIBLE);
+        Button call = dialog.findViewById(R.id.dialog_ok_button);
+        call.setVisibility(View.VISIBLE);
+        call.setText(R.string.call);
+
+        cancel.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+
+        call.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        CallLog[] logs = LinphoneManager.getCore().getCallLogs();
+                        CallLog lastLog = logs[0];
+                        Address addressToCall =
+                                lastLog.getDir() == Call.Dir.Incoming
+                                        ? lastLog.getFromAddress()
+                                        : lastLog.getToAddress();
+                        LinphoneManager.getCallManager()
+                                .newOutgoingCall(addressToCall.asString(), null);
+                        dialog.dismiss();
+                    }
+                });
+        dialog.show();
     }
 
-    private static Context getContext() {
-        if (sContext == null && LinphoneManager.isInstanciated())
-            sContext = LinphoneManager.getInstance().getContext();
-        return sContext;
-    }
+    public static Dialog getDialog(Context context, String text) {
+        final Dialog dialog = new Dialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        Drawable d = new ColorDrawable(ContextCompat.getColor(context, R.color.dark_grey_color));
+        d.setAlpha(200);
+        dialog.setContentView(R.layout.dialog);
+        dialog.getWindow()
+                .setLayout(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT);
+        dialog.getWindow().setBackgroundDrawable(d);
 
-    public static ArrayList<ChatRoom> removeEmptyOneToOneChatRooms(ChatRoom[] rooms) {
-        ArrayList<ChatRoom> newRooms = new ArrayList<>();
-        for (ChatRoom room : rooms) {
-            if (room.hasCapability(ChatRoomCapabilities.OneToOne.toInt())
-                    && room.getHistorySize() == 0) {
-                // Hide 1-1 chat rooms without messages
-            } else {
-                newRooms.add(room);
-            }
-        }
-        return newRooms;
+        TextView customText = dialog.findViewById(R.id.dialog_message);
+        customText.setText(text);
+        return dialog;
     }
 }

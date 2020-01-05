@@ -1,23 +1,23 @@
-package org.linphone.contacts;
-
 /*
-SearchContactsAdapter.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.contacts;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,22 +26,24 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
-import org.linphone.LinphoneActivity;
+import java.util.Objects;
+import org.linphone.LinphoneContext;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
+import org.linphone.contacts.views.ContactAvatar;
 import org.linphone.core.Address;
+import org.linphone.core.Core;
 import org.linphone.core.FriendCapability;
 import org.linphone.core.PresenceBasicStatus;
 import org.linphone.core.PresenceModel;
 import org.linphone.core.ProxyConfig;
 import org.linphone.core.SearchResult;
-import org.linphone.views.ContactAvatar;
 
 public class SearchContactsAdapter extends RecyclerView.Adapter<SearchContactViewHolder> {
     private List<SearchResult> mContacts;
     private ArrayList<ContactAddress> mContactsSelected;
     private boolean mOnlySipContact = false;
-    private SearchContactViewHolder.ClickListener mListener;
+    private final SearchContactViewHolder.ClickListener mListener;
     private final boolean mIsOnlyOnePersonSelection;
     private String mPreviousSearch;
     private boolean mSecurityEnabled;
@@ -116,15 +118,21 @@ public class SearchContactsAdapter extends RecyclerView.Adapter<SearchContactVie
                 holder.name.setVisibility(View.VISIBLE);
                 holder.name.setText(searchResult.getAddress().getDisplayName());
             }
-        } else if (searchResult.getAddress() != null) {
-            holder.name.setVisibility(View.VISIBLE);
-            holder.name.setText(
-                    (searchResult.getAddress().getDisplayName() != null)
-                            ? searchResult.getAddress().getDisplayName()
-                            : searchResult.getAddress().getUsername());
+        }
+        holder.disabled.setVisibility(View.GONE);
+
+        if (mSecurityEnabled || !mIsOnlyOnePersonSelection) {
+            Core core = LinphoneManager.getCore();
+            ProxyConfig defaultProxyConfig = core.getDefaultProxyConfig();
+            if (defaultProxyConfig != null) {
+                // SDK won't accept ourselves in the list of participants
+                if (defaultProxyConfig.getIdentityAddress().weakEqual(searchResult.getAddress())) {
+                    // Disable row, we can't use our own address in a group chat room
+                    holder.disabled.setVisibility(View.VISIBLE);
+                }
+            }
         }
 
-        holder.disabled.setVisibility(View.GONE);
         if (contact != null) {
             if (contact.getFullName() == null
                     && contact.getFirstName() == null
@@ -142,15 +150,6 @@ public class SearchContactsAdapter extends RecyclerView.Adapter<SearchContactVie
                             && !searchResult.hasCapability(FriendCapability.LimeX3Dh))) {
                 // Disable row, contact doesn't have the required capabilities
                 holder.disabled.setVisibility(View.VISIBLE);
-            } else if (mSecurityEnabled || !mIsOnlyOnePersonSelection) {
-                ProxyConfig lpc =
-                        LinphoneManager.getLcIfManagerNotDestroyedOrNull().getDefaultProxyConfig();
-                if (lpc != null
-                        && searchResult.getAddress() != null
-                        && lpc.getIdentityAddress().weakEqual(searchResult.getAddress())) {
-                    // Disable row, we can't use our own address in a group chat room
-                    holder.disabled.setVisibility(View.VISIBLE);
-                }
             }
         } else {
             ContactAvatar.displayAvatar(holder.name.getText().toString(), holder.avatarLayout);
@@ -182,7 +181,7 @@ public class SearchContactsAdapter extends RecyclerView.Adapter<SearchContactVie
         return position;
     }
 
-    public synchronized boolean isContactSelected(SearchResult sr) {
+    private synchronized boolean isContactSelected(SearchResult sr) {
         for (ContactAddress c : mContactsSelected) {
             Address addr = c.getAddress();
             if (addr != null && sr.getAddress() != null) {
@@ -240,7 +239,7 @@ public class SearchContactsAdapter extends RecyclerView.Adapter<SearchContactVie
         mPreviousSearch = search;
 
         String domain = "";
-        ProxyConfig prx = LinphoneManager.getLc().getDefaultProxyConfig();
+        ProxyConfig prx = Objects.requireNonNull(LinphoneManager.getCore()).getDefaultProxyConfig();
         if (prx != null) domain = prx.getDomain();
         SearchResult[] searchResults =
                 ContactsManager.getInstance()
@@ -248,7 +247,8 @@ public class SearchContactsAdapter extends RecyclerView.Adapter<SearchContactVie
                         .getContactListFromFilter(search, mOnlySipContact ? domain : "");
 
         for (SearchResult sr : searchResults) {
-            if (LinphoneActivity.instance()
+            if (LinphoneContext.instance()
+                    .getApplicationContext()
                     .getResources()
                     .getBoolean(R.bool.hide_sip_contacts_without_presence)) {
                 if (sr.getFriend() != null) {

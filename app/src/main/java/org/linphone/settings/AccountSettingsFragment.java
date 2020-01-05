@@ -1,25 +1,24 @@
+/*
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.linphone.settings;
 
-/*
-AccountSettingsFragment.java
-Copyright (C) 2019 Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-
-import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
@@ -29,10 +28,9 @@ import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import org.linphone.LinphoneActivity;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
-import org.linphone.assistant.AssistantActivity;
+import org.linphone.assistant.PhoneAccountLinkingAssistantActivity;
 import org.linphone.core.AVPFMode;
 import org.linphone.core.Address;
 import org.linphone.core.AuthInfo;
@@ -42,7 +40,6 @@ import org.linphone.core.NatPolicy;
 import org.linphone.core.ProxyConfig;
 import org.linphone.core.TransportType;
 import org.linphone.core.tools.Log;
-import org.linphone.fragments.FragmentsAvailable;
 import org.linphone.settings.widget.BasicSetting;
 import org.linphone.settings.widget.ListSetting;
 import org.linphone.settings.widget.SettingListenerBase;
@@ -50,9 +47,8 @@ import org.linphone.settings.widget.SwitchSetting;
 import org.linphone.settings.widget.TextSetting;
 import org.linphone.utils.PushNotificationUtils;
 
-public class AccountSettingsFragment extends Fragment {
-    protected View mRootView;
-    protected LinphonePreferences mPrefs;
+public class AccountSettingsFragment extends SettingsFragment {
+    private View mRootView;
     private int mAccountIndex;
     private ProxyConfig mProxyConfig;
     private AuthInfo mAuthInfo;
@@ -93,7 +89,7 @@ public class AccountSettingsFragment extends Fragment {
         }
 
         mProxyConfig = null;
-        Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+        Core core = LinphoneManager.getCore();
         if (mAccountIndex >= 0 && core != null) {
             ProxyConfig[] proxyConfigs = core.getProxyConfigList();
             if (proxyConfigs.length > mAccountIndex) {
@@ -117,14 +113,6 @@ public class AccountSettingsFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        mPrefs = LinphonePreferences.instance();
-        if (LinphoneActivity.isInstanciated()) {
-            LinphoneActivity.instance()
-                    .selectMenu(
-                            FragmentsAvailable.SETTINGS_SUBLEVEL,
-                            getString(R.string.pref_sipaccount));
-        }
-
         updateValues();
     }
 
@@ -132,7 +120,7 @@ public class AccountSettingsFragment extends Fragment {
     public void onPause() {
         super.onPause();
         if (mIsNewlyCreatedAccount) {
-            Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+            Core core = LinphoneManager.getCore();
             if (core != null && mProxyConfig != null && mAuthInfo != null) {
                 core.addAuthInfo(mAuthInfo);
                 core.addProxyConfig(mProxyConfig);
@@ -143,7 +131,7 @@ public class AccountSettingsFragment extends Fragment {
         }
     }
 
-    protected void loadSettings() {
+    private void loadSettings() {
         mUsername = mRootView.findViewById(R.id.pref_username);
 
         mUserId = mRootView.findViewById(R.id.pref_auth_userid);
@@ -167,6 +155,7 @@ public class AccountSettingsFragment extends Fragment {
         mExpire.setInputType(InputType.TYPE_CLASS_NUMBER);
 
         mPrefix = mRootView.findViewById(R.id.pref_prefix);
+        mPrefix.setInputType(InputType.TYPE_CLASS_NUMBER);
 
         mAvpfInterval = mRootView.findViewById(R.id.pref_avpf_rr_interval);
         mAvpfInterval.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -188,7 +177,7 @@ public class AccountSettingsFragment extends Fragment {
                 PushNotificationUtils.isAvailable(getActivity()) ? View.VISIBLE : View.GONE);
 
         mChangePassword = mRootView.findViewById(R.id.pref_change_password);
-        mChangePassword.setVisibility(View.GONE); // TODO
+        mChangePassword.setVisibility(View.GONE); // TODO add feature
 
         mDeleteAccount = mRootView.findViewById(R.id.pref_delete_account);
 
@@ -198,11 +187,15 @@ public class AccountSettingsFragment extends Fragment {
         initTransportList();
     }
 
-    protected void setListeners() {
+    private void setListeners() {
         mUsername.setListener(
                 new SettingListenerBase() {
                     @Override
                     public void onTextValueChanged(String newValue) {
+                        if (newValue.isEmpty()) {
+                            return;
+                        }
+
                         if (mAuthInfo != null) {
                             mAuthInfo.setUsername(newValue);
                         } else {
@@ -229,7 +222,8 @@ public class AccountSettingsFragment extends Fragment {
                     public void onTextValueChanged(String newValue) {
                         if (mAuthInfo != null) {
                             mAuthInfo.setUserid(newValue);
-                            Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+
+                            Core core = LinphoneManager.getCore();
                             if (core != null) {
                                 core.refreshRegisters();
                             }
@@ -244,9 +238,14 @@ public class AccountSettingsFragment extends Fragment {
                     @Override
                     public void onTextValueChanged(String newValue) {
                         if (mAuthInfo != null) {
+                            mAuthInfo.setHa1(null);
                             mAuthInfo.setPassword(newValue);
-                            Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+                            // Reset algorithm to generate correct hash depending on
+                            // algorithm set in next to come 401
+                            mAuthInfo.setAlgorithm(null);
+                            Core core = LinphoneManager.getCore();
                             if (core != null) {
+                                core.addAuthInfo(mAuthInfo);
                                 core.refreshRegisters();
                             }
                         } else {
@@ -259,6 +258,15 @@ public class AccountSettingsFragment extends Fragment {
                 new SettingListenerBase() {
                     @Override
                     public void onTextValueChanged(String newValue) {
+                        if (newValue.isEmpty()) {
+                            return;
+                        }
+                        if (newValue.contains(":")) {
+                            Log.e(
+                                    "[Account Settings] Do not specify port information inside domain field !");
+                            return;
+                        }
+
                         if (mAuthInfo != null) {
                             mAuthInfo.setDomain(newValue);
                         } else {
@@ -326,7 +334,7 @@ public class AccountSettingsFragment extends Fragment {
                             mProxyConfig.edit();
                             NatPolicy natPolicy = mProxyConfig.getNatPolicy();
                             if (natPolicy == null) {
-                                Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+                                Core core = LinphoneManager.getCore();
                                 if (core != null) {
                                     natPolicy = core.createNatPolicy();
                                     mProxyConfig.setNatPolicy(natPolicy);
@@ -415,12 +423,14 @@ public class AccountSettingsFragment extends Fragment {
                     @Override
                     public void onBoolValueChanged(boolean newValue) {
                         if (mProxyConfig != null) {
-                            Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+                            Core core = LinphoneManager.getCore();
                             if (core != null && newValue) {
                                 core.setDefaultProxyConfig(mProxyConfig);
                                 mUseAsDefault.setEnabled(false);
                             }
-                            LinphoneActivity.instance().refreshAccounts();
+                            ((SettingsActivity) getActivity())
+                                    .getSideMenuFragment()
+                                    .displayAccountsInSideMenu();
                         } else {
                             Log.e("[Account Settings] No proxy config !");
                         }
@@ -454,7 +464,7 @@ public class AccountSettingsFragment extends Fragment {
 
                             NatPolicy natPolicy = mProxyConfig.getNatPolicy();
                             if (natPolicy == null) {
-                                Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+                                Core core = LinphoneManager.getCore();
                                 if (core != null) {
                                     natPolicy = core.createNatPolicy();
                                     mProxyConfig.setNatPolicy(natPolicy);
@@ -519,7 +529,7 @@ public class AccountSettingsFragment extends Fragment {
                 new SettingListenerBase() {
                     @Override
                     public void onClicked() {
-                        // TODO
+                        // TODO add feature
                     }
                 });
 
@@ -527,7 +537,7 @@ public class AccountSettingsFragment extends Fragment {
                 new SettingListenerBase() {
                     @Override
                     public void onClicked() {
-                        Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+                        Core core = LinphoneManager.getCore();
                         if (core != null) {
                             if (mProxyConfig != null) {
                                 core.removeProxyConfig(mProxyConfig);
@@ -536,8 +546,19 @@ public class AccountSettingsFragment extends Fragment {
                                 core.removeAuthInfo(mAuthInfo);
                             }
                         }
-                        LinphoneActivity.instance().displaySettings();
-                        LinphoneActivity.instance().refreshAccounts();
+
+                        // Set a new default proxy config if the current one has been removed
+                        if (core != null && core.getDefaultProxyConfig() == null) {
+                            ProxyConfig[] proxyConfigs = core.getProxyConfigList();
+                            if (proxyConfigs.length > 0) {
+                                core.setDefaultProxyConfig(proxyConfigs[0]);
+                            }
+                        }
+
+                        ((SettingsActivity) getActivity())
+                                .getSideMenuFragment()
+                                .displayAccountsInSideMenu();
+                        ((SettingsActivity) getActivity()).goBack();
                     }
                 });
 
@@ -546,9 +567,8 @@ public class AccountSettingsFragment extends Fragment {
                     @Override
                     public void onClicked() {
                         Intent assistant = new Intent();
-                        assistant.setClass(LinphoneActivity.instance(), AssistantActivity.class);
-                        assistant.putExtra("LinkPhoneNumber", true);
-                        assistant.putExtra("FromPref", true);
+                        assistant.setClass(
+                                getActivity(), PhoneAccountLinkingAssistantActivity.class);
                         assistant.putExtra("AccountNumber", mAccountIndex);
                         startActivity(assistant);
                     }
@@ -584,14 +604,14 @@ public class AccountSettingsFragment extends Fragment {
                 });
     }
 
-    protected void updateValues() {
-        Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+    private void updateValues() {
+        Core core = LinphoneManager.getCore();
         if (core == null) return;
 
         // Create a proxy config if there is none
         if (mProxyConfig == null) {
             // Ensure the default configuration is loaded first
-            String defaultConfig = LinphoneManager.getInstance().getDefaultDynamicConfigFile();
+            String defaultConfig = LinphonePreferences.instance().getDefaultDynamicConfigFile();
             core.loadConfigFromXml(defaultConfig);
             mProxyConfig = core.createProxyConfig();
             mAuthInfo = Factory.instance().createAuthInfo(null, null, null, null, null, null);
@@ -601,6 +621,7 @@ public class AccountSettingsFragment extends Fragment {
         if (mProxyConfig != null) {
             Address identityAddress = mProxyConfig.getIdentityAddress();
             mAuthInfo = mProxyConfig.findAuthInfo();
+
             NatPolicy natPolicy = mProxyConfig.getNatPolicy();
             if (natPolicy == null) {
                 natPolicy = core.createNatPolicy();
@@ -632,11 +653,11 @@ public class AccountSettingsFragment extends Fragment {
 
             mDisable.setChecked(!mProxyConfig.registerEnabled());
 
-            mUseAsDefault.setChecked(
-                    core != null && mProxyConfig.equals(core.getDefaultProxyConfig()));
+            mUseAsDefault.setChecked(mProxyConfig.equals(core.getDefaultProxyConfig()));
             mUseAsDefault.setEnabled(!mUseAsDefault.isChecked());
 
-            mOutboundProxy.setChecked(mProxyConfig.getRoute() != null);
+            String[] routes = mProxyConfig.getRoutes();
+            mOutboundProxy.setChecked(routes != null && routes.length > 0);
 
             mIce.setChecked(natPolicy.iceEnabled());
             mIce.setEnabled(
@@ -652,6 +673,9 @@ public class AccountSettingsFragment extends Fragment {
             if (proxy != null) {
                 mTransport.setValue(proxy.getTransport().toInt());
             }
+
+            mLinkAccount.setEnabled(
+                    mProxyConfig.getDomain().equals(getString(R.string.default_domain)));
         }
 
         setListeners();

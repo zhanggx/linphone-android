@@ -1,27 +1,28 @@
-package org.linphone.compatibility;
-
 /*
-ApiTwentySixPlus.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.compatibility;
 
 import static org.linphone.compatibility.Compatibility.CHAT_NOTIFICATIONS_GROUP;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -30,10 +31,13 @@ import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.provider.Settings;
+import android.widget.RemoteViews;
 import org.linphone.R;
+import org.linphone.core.tools.Log;
 import org.linphone.notifications.Notifiable;
 import org.linphone.notifications.NotifiableMessage;
 
@@ -72,7 +76,7 @@ class ApiTwentySixPlus {
         CharSequence name = context.getString(R.string.content_title_notification_service);
         String description = context.getString(R.string.content_title_notification_service);
         NotificationChannel channel =
-                new NotificationChannel(id, name, NotificationManager.IMPORTANCE_NONE);
+                new NotificationChannel(id, name, NotificationManager.IMPORTANCE_LOW);
         channel.setDescription(description);
         channel.enableVibration(false);
         channel.enableLights(false);
@@ -132,43 +136,77 @@ class ApiTwentySixPlus {
                 .setShowWhen(true)
                 .setColor(context.getColor(R.color.notification_led_color))
                 .setStyle(style)
-                .addAction(ApiTwentyFourPlus.getReplyMessageAction(context, notif))
-                .addAction(ApiTwentyFourPlus.getMarkMessageAsReadAction(context, notif))
+                .addAction(Compatibility.getReplyMessageAction(context, notif))
+                .addAction(Compatibility.getMarkMessageAsReadAction(context, notif))
                 .build();
     }
 
     public static Notification createInCallNotification(
             Context context,
             int callId,
-            boolean showAnswerAction,
             String msg,
             int iconID,
             Bitmap contactIcon,
             String contactName,
             PendingIntent intent) {
 
-        Notification.Builder builder =
-                new Notification.Builder(
-                                context,
-                                context.getString(R.string.notification_service_channel_id))
-                        .setContentTitle(contactName)
-                        .setContentText(msg)
-                        .setSmallIcon(iconID)
-                        .setAutoCancel(false)
-                        .setContentIntent(intent)
-                        .setLargeIcon(contactIcon)
-                        .setCategory(Notification.CATEGORY_CALL)
-                        .setVisibility(Notification.VISIBILITY_PUBLIC)
-                        .setPriority(Notification.PRIORITY_HIGH)
-                        .setWhen(System.currentTimeMillis())
-                        .setShowWhen(true)
-                        .setColor(context.getColor(R.color.notification_led_color))
-                        .addAction(ApiTwentyFourPlus.getCallDeclineAction(context, callId));
+        return new Notification.Builder(
+                        context, context.getString(R.string.notification_service_channel_id))
+                .setContentTitle(contactName)
+                .setContentText(msg)
+                .setSmallIcon(iconID)
+                .setAutoCancel(false)
+                .setContentIntent(intent)
+                .setLargeIcon(contactIcon)
+                .setCategory(Notification.CATEGORY_CALL)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setPriority(Notification.PRIORITY_LOW)
+                .setWhen(System.currentTimeMillis())
+                .setShowWhen(true)
+                .setOngoing(true)
+                .setColor(context.getColor(R.color.notification_led_color))
+                .addAction(Compatibility.getCallDeclineAction(context, callId))
+                .build();
+    }
 
-        if (showAnswerAction) {
-            builder.addAction(ApiTwentyFourPlus.getCallAnswerAction(context, callId));
+    public static Notification createIncomingCallNotification(
+            Context context,
+            int callId,
+            Bitmap contactIcon,
+            String contactName,
+            String sipUri,
+            PendingIntent intent) {
+        RemoteViews notificationLayoutHeadsUp =
+                new RemoteViews(
+                        context.getPackageName(), R.layout.call_incoming_notification_heads_up);
+        notificationLayoutHeadsUp.setTextViewText(R.id.caller, contactName);
+        notificationLayoutHeadsUp.setTextViewText(R.id.sip_uri, sipUri);
+        notificationLayoutHeadsUp.setTextViewText(
+                R.id.incoming_call_info, context.getString(R.string.incall_notif_incoming));
+        if (contactIcon != null) {
+            notificationLayoutHeadsUp.setImageViewBitmap(R.id.caller_picture, contactIcon);
         }
-        return builder.build();
+
+        return new Notification.Builder(
+                        context, context.getString(R.string.notification_channel_id))
+                .setStyle(new Notification.DecoratedCustomViewStyle())
+                .setSmallIcon(R.drawable.topbar_call_notification)
+                .setContentTitle(contactName)
+                .setContentText(context.getString(R.string.incall_notif_incoming))
+                .setContentIntent(intent)
+                .setCategory(Notification.CATEGORY_CALL)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setWhen(System.currentTimeMillis())
+                .setAutoCancel(false)
+                .setShowWhen(true)
+                .setOngoing(true)
+                .setColor(context.getColor(R.color.notification_led_color))
+                .setFullScreenIntent(intent, true)
+                .addAction(Compatibility.getCallDeclineAction(context, callId))
+                .addAction(Compatibility.getCallAnswerAction(context, callId))
+                .setCustomHeadsUpContentView(notificationLayoutHeadsUp)
+                .build();
     }
 
     public static Notification createNotification(
@@ -179,7 +217,8 @@ class ApiTwentySixPlus {
             int level,
             Bitmap largeIcon,
             PendingIntent intent,
-            int priority) {
+            int priority,
+            boolean ongoing) {
 
         if (largeIcon != null) {
             return new Notification.Builder(
@@ -194,6 +233,7 @@ class ApiTwentySixPlus {
                     .setPriority(priority)
                     .setWhen(System.currentTimeMillis())
                     .setShowWhen(true)
+                    .setOngoing(ongoing)
                     .setColor(context.getColor(R.color.notification_led_color))
                     .build();
         } else {
@@ -214,7 +254,7 @@ class ApiTwentySixPlus {
     }
 
     public static Notification createMissedCallNotification(
-            Context context, String title, String text, PendingIntent intent) {
+            Context context, String title, String text, PendingIntent intent, int count) {
         return new Notification.Builder(
                         context, context.getString(R.string.notification_channel_id))
                 .setContentTitle(title)
@@ -228,6 +268,7 @@ class ApiTwentySixPlus {
                 .setPriority(Notification.PRIORITY_HIGH)
                 .setWhen(System.currentTimeMillis())
                 .setShowWhen(true)
+                .setNumber(count)
                 .setColor(context.getColor(R.color.notification_led_color))
                 .build();
     }
@@ -259,5 +300,15 @@ class ApiTwentySixPlus {
     public static void setFragmentTransactionReorderingAllowed(
             FragmentTransaction transaction, boolean allowed) {
         transaction.setReorderingAllowed(allowed);
+    }
+
+    public static void enterPipMode(Activity activity) {
+        boolean supportsPip =
+                activity.getPackageManager()
+                        .hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE);
+        Log.i("[Call] Is picture in picture supported: " + supportsPip);
+        if (supportsPip) {
+            activity.enterPictureInPictureMode();
+        }
     }
 }

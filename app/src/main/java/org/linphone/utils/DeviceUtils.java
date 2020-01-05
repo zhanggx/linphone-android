@@ -1,23 +1,23 @@
-package org.linphone.utils;
-
 /*
-DeviceUtils.java
-Copyright (C) 2018  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.utils;
 
 import android.app.Dialog;
 import android.content.ComponentName;
@@ -27,6 +27,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -56,12 +57,12 @@ public class DeviceUtils {
                 .setComponent(
                         new ComponentName(
                                 "com.huawei.systemmanager",
-                                "com.huawei.systemmanager.optimize.process.ProtectActivity")),
+                                "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity")),
         new Intent()
                 .setComponent(
                         new ComponentName(
                                 "com.huawei.systemmanager",
-                                "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity")),
+                                "com.huawei.systemmanager.optimize.process.ProtectActivity")),
         new Intent()
                 .setComponent(
                         new ComponentName(
@@ -105,7 +106,23 @@ public class DeviceUtils {
         new Intent()
                 .setComponent(
                         new ComponentName(
-                                "com.asus.mobilemanager", "com.asus.mobilemanager.MainActivity"))
+                                "com.asus.mobilemanager", "com.asus.mobilemanager.MainActivity")),
+        new Intent()
+                .setComponent(
+                        new ComponentName(
+                                "com.asus.mobilemanager",
+                                "com.asus.mobilemanager.autostart.AutoStartActivity")),
+        new Intent()
+                .setComponent(
+                        new ComponentName(
+                                "com.asus.mobilemanager",
+                                "com.asus.mobilemanager.entry.FunctionActivity"))
+                .setData(Uri.parse("mobilemanager://function/entry/AutoStart")),
+        new Intent()
+                .setComponent(
+                        new ComponentName(
+                                "com.dewav.dwappmanager",
+                                "com.dewav.dwappmanager.memory.SmartClearupWhiteList"))
     };
 
     public static Intent getDevicePowerManagerIntent(Context context) {
@@ -134,9 +151,10 @@ public class DeviceUtils {
         for (final Intent intent : POWERMANAGER_INTENTS) {
             if (DeviceUtils.isIntentCallable(context, intent)) {
                 Log.w(
-                        "[Hacks] "
-                                + android.os.Build.MANUFACTURER
-                                + " device with power saver detected !");
+                        "[Hacks] ",
+                        android.os.Build.MANUFACTURER,
+                        " device with power saver detected: ",
+                        intent.getComponent().getClassName());
                 if (!LinphonePreferences.instance().hasPowerSaverDialogBeenPrompted()) {
                     Log.w("[Hacks] Asking power saver for whitelist !");
 
@@ -180,12 +198,19 @@ public class DeviceUtils {
                                 public void onClick(View v) {
                                     Log.w(
                                             "[Hacks] Power saver detected, user is going to settings :)");
-                                    if (doNotAskAgain.isChecked()) {
-                                        LinphonePreferences.instance()
-                                                .powerSaverDialogPrompted(true);
-                                    }
+                                    // If user is going into the settings,
+                                    // assume it will make the change so don't prompt again
+                                    LinphonePreferences.instance().powerSaverDialogPrompted(true);
 
-                                    context.startActivity(intent);
+                                    try {
+                                        context.startActivity(intent);
+                                    } catch (SecurityException se) {
+                                        Log.e(
+                                                "[Hacks] Couldn't start intent [",
+                                                intent.getComponent().getClassName(),
+                                                "], security exception was thrown: ",
+                                                se);
+                                    }
                                     dialog.dismiss();
                                 }
                             });

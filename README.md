@@ -5,6 +5,8 @@ https://github.com/BelledonneCommunications/linphone-android.git
 
 请遵守linphone相关开源发布协议
 
+### History
+2020/1/5 Update to Version:4.3-alpha
 
 
 ## Create an APK with a different package name

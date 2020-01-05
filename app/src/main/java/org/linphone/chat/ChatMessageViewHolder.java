@@ -1,27 +1,28 @@
-package org.linphone.chat;
-
 /*
-ChatMessageViewHolder.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.chat;
 
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -38,6 +39,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
@@ -45,10 +47,10 @@ import com.google.android.flexbox.FlexboxLayout;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import org.linphone.LinphoneActivity;
 import org.linphone.R;
 import org.linphone.contacts.ContactsManager;
 import org.linphone.contacts.LinphoneContact;
+import org.linphone.contacts.views.ContactAvatar;
 import org.linphone.core.Address;
 import org.linphone.core.ChatMessage;
 import org.linphone.core.Content;
@@ -56,7 +58,6 @@ import org.linphone.core.tools.Log;
 import org.linphone.utils.FileUtils;
 import org.linphone.utils.ImageUtils;
 import org.linphone.utils.LinphoneUtils;
-import org.linphone.views.ContactAvatar;
 
 public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
@@ -71,15 +72,17 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements Vi
     public final LinearLayout background;
     public final RelativeLayout avatarLayout;
 
-    public final ProgressBar downloadInProgress, sendInProgress;
+    private final ProgressBar downloadInProgress;
+    public final ProgressBar sendInProgress;
     public final TextView timeText;
-    public final ImageView outgoingImdn;
-    public final TextView messageText;
+    private final ImageView outgoingImdn;
+    private final TextView messageText;
 
-    public final FlexboxLayout multiFileContents;
-    public final RelativeLayout singleFileContent;
+    private final FlexboxLayout multiFileContents;
+    private final RelativeLayout singleFileContent;
 
     public final CheckBox delete;
+    public boolean isEditionEnabled;
 
     private Context mContext;
     private ChatMessageViewHolderClickListener mListener;
@@ -92,7 +95,7 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements Vi
         view.setOnClickListener(this);
     }
 
-    public ChatMessageViewHolder(View view) {
+    private ChatMessageViewHolder(View view) {
         super(view);
         eventLayout = view.findViewById(R.id.event);
         eventMessage = view.findViewById(R.id.event_text);
@@ -174,8 +177,7 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements Vi
             background.setBackgroundResource(R.drawable.chat_bubble_incoming_full);
 
             // Can't anchor incoming messages, setting this to align max width with LIME icon
-            bubbleLayout.setPadding(
-                    0, 0, (int) ImageUtils.dpToPixels(LinphoneActivity.instance(), 18), 0);
+            bubbleLayout.setPadding(0, 0, (int) ImageUtils.dpToPixels(mContext, 18), 0);
 
             if (status == ChatMessage.State.FileTransferInProgress) {
                 downloadInProgress.setVisibility(View.VISIBLE);
@@ -274,7 +276,11 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements Vi
                     new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            openFile(filePath);
+                            if (isEditionEnabled) {
+                                ChatMessageViewHolder.this.onClick(v);
+                            } else {
+                                openFile(filePath);
+                            }
                         }
                     });
         } else {
@@ -295,7 +301,7 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements Vi
                                     FileUtils.getStorageDirectory(mContext),
                                     prefix + "_" + filename);
                     Log.w(
-                            "File with that name already exists, renamed to "
+                            "[Chat Message View] File with that name already exists, renamed to "
                                     + prefix
                                     + "_"
                                     + filename);
@@ -314,18 +320,23 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements Vi
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Content c = (Content) v.getTag();
-                                if (!message.isFileTransferInProgress()) {
-                                    message.downloadContent(c);
+                                if (isEditionEnabled) {
+                                    ChatMessageViewHolder.this.onClick(v);
                                 } else {
-                                    message.cancelFileTransfer();
+                                    Content c = (Content) v.getTag();
+                                    if (!message.isFileTransferInProgress()) {
+                                        message.downloadContent(c);
+                                    } else {
+                                        message.cancelFileTransfer();
+                                    }
                                 }
                             }
                         });
             } else {
                 Log.w(
-                        "WRITE_EXTERNAL_STORAGE permission not granted, won't be able to store the downloaded file");
-                LinphoneActivity.instance().checkAndRequestExternalStoragePermission();
+                        "[Chat Message View] WRITE_EXTERNAL_STORAGE permission not granted, won't be able to store the downloaded file");
+                ((ChatActivity) mContext)
+                        .requestPermissionIfNotGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             }
         }
     }
@@ -353,22 +364,48 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder implements Vi
                                 mContext.getResources().getString(R.string.file_provider),
                                 file);
             } catch (Exception e) {
+                Log.e(
+                        "[Chat Message View] Couldn't get URI for file "
+                                + file
+                                + " using file provider "
+                                + mContext.getResources().getString(R.string.file_provider));
                 contentUri = Uri.parse(path);
             }
         }
 
+        String filePath = contentUri.toString();
+        Log.i("[Chat Message View] Trying to open file: " + filePath);
         String type = null;
-        String extension = MimeTypeMap.getFileExtensionFromUrl(contentUri.toString());
-        if (extension != null) {
+        String extension = FileUtils.getExtensionFromFileName(filePath);
+
+        if (extension != null && !extension.isEmpty()) {
+            Log.i("[Chat Message View] Found extension " + extension);
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-        }
-        if (type != null) {
-            intent.setDataAndType(contentUri, type);
         } else {
-            intent.setDataAndType(contentUri, "*/*");
+            Log.e("[Chat Message View] Couldn't find extension");
         }
+
+        if (type != null) {
+            Log.i("[Chat Message View] Found matching MIME type " + type);
+        } else {
+            type = FileUtils.getMimeFromFile(filePath);
+            Log.e(
+                    "[Chat Message View] Can't get MIME type from extension: "
+                            + extension
+                            + ", will use "
+                            + type);
+        }
+
+        intent.setDataAndType(contentUri, type);
         intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION);
-        mContext.startActivity(intent);
+
+        try {
+            mContext.startActivity(intent);
+        } catch (ActivityNotFoundException anfe) {
+            Log.e("[Chat Message View] Couldn't find an activity to handle MIME type: " + type);
+            Toast.makeText(mContext, R.string.cant_open_file_no_app_found, Toast.LENGTH_LONG)
+                    .show();
+        }
     }
 
     private void loadBitmap(String path, ImageView imageView) {

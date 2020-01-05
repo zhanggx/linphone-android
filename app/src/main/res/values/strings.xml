@@ -102,7 +102,7 @@
     <string name="assistant_ec_calibration">Echo canceler calibration in progress</string>
     <string name="assistant_remote_provisioning_login">Enter your login</string>
     <string name="assistant_account_not_validated">Your account has not been validated yet.</string>
-    <string name="assistant_error_confirmation_code">The confirmation code is invalid.\r\nPlease try again.</string>
+    <string name="assistant_error_confirmation_code">The confirmation code is invalid.\nPlease try again.</string>
     <string name="assistant_account_validated">Your account has been validated.</string>
     <string name="assistant_error_bad_credentials">Incorrect username or password</string>
     <string name="assistant_codec_down_question">Do you agree to download OpenH264 Video Codec provided by Cisco Systems, Inc.?</string>
@@ -114,13 +114,13 @@
     <string name="wizard_failed">An error occurred, try again later.</string>
     <string name="wizard_server_unavailable">Server unreachable, verify your network connection.</string>
     <string name="wizard_username_unavailable">This username is already taken.</string>
-    <string name="assistant_phone_number_unavailable">This phone number is already used.\r\nPlease type a different number.\r\nYou can delete your existing account if you want to reuse your phone number.</string>
+    <string name="assistant_phone_number_unavailable">This phone number is already used.\nPlease type a different number.\nYou can delete your existing account if you want to reuse your phone number.</string>
     <string name="wizard_username_incorrect">Your username is invalid.</string>
     <string name="assistant_phone_number_incorrect">Your phone number is invalid.</string>
     <string name="wizard_email_incorrect">Your email is invalid.</string>
     <string name="wizard_password_incorrect">Your password is invalid</string>
     <string name="wizard_passwords_unmatched">Passwords do not match.</string>
-    <string name="setup_confirm_username">Your username will be %s.\r\n\r\nIt may differ from your input to match requirements.\r\nDo you accept?</string>
+    <string name="setup_confirm_username">Your username will be %s.\n\nIt may differ from your input to match requirements.\nDo you accept?</string>
     <string name="first_launch_no_login_password">Please enter your login and password</string>
     <string name="forgot_password">Forgot password ?</string>
     <string name="assistant_choose_country">Choose a country</string>
@@ -133,6 +133,8 @@
     <string name="phone_number_info_content">\nThanks to your phone number, your friends will find you more easily.\n\n You will see in your address book who is using Linphone and your friends will know that they can reach you on Linphone as well.\n</string>
     <string name="phone_number_link_info_content">\nYour friends will find you more easily if you link your account to your phone number\n\nYou will see in your address book who is using Linphone and your friends will know that they can reach you on Linphone as well.\n</string>
     <string name="phone_number_link_info_content_already_account">You can only use your phone number with one Linphone account.\n\nIf you had already linked your number to an other account but you prefer to use this one, simply link it now and your number will automatically be moved to this account.</string>
+    <string name="phone_number_overuse">Too much SMS have been sent to this number in a short period of time, try again in 24 hours.</string>
+    <string name="account_doesnt_exist">Account doesn\'t exist</string>
 
     <!-- Status -->
     <string name="invalid_email">Invalid email</string>
@@ -148,11 +150,13 @@
     <string name="phone_number_too_long">Phone number too long</string>
     <string name="phone_number_too_short">Phone number too short</string>
     <string name="phone_number_invalid">Invalid phone number</string>
+    <string name="activation_code_invalid">Invalid activation code</string>
     <string name="password_too_short">Password too short</string>
     <string name="password_too_long">Password too long</string>
     <string name="request_failed">Failed to query the server. Please try again later</string>
     <string name="transport_unsupported">Unsupported transport</string>
     <string name="country_code_invalid">Country code invalid</string>
+    <string name="invalid_characters">Invalid character(s) found</string>
 
     <!-- In-app -->
     <string name="inapp">In-app</string>
@@ -250,6 +254,8 @@
     <string name="unexpected_event">Unexpected event %i for %s</string>
     <string name="download_file">Download</string>
     <string name="toast_choose_chat_room_for_sharing">Select a conversation or create a new one</string>
+    <string name="trust_denied">Trust has been denied. Make a call to start the authentication process again.</string>
+    <string name="cant_open_file_no_app_found">Can\'t open file, no application available for this format.</string>
 
     <!-- Status Bar -->
     <string name="status_connected">Connected</string>
@@ -296,7 +302,9 @@
     <string name="call_stats_jitter_buffer">Jitter buffer:</string>
     <string name="call_stats_encoder_name">Encoder:</string>
     <string name="call_stats_decoder_name">Decoder:</string>
+    <string name="call_stats_player_filter">Player filter:</string>
     <string name="call_stats_display_filter">Display filter:</string>
+    <string name="call_stats_capture_filter">Capture filter:</string>
     <string name="call">Call</string>
     <string name="call_log_delete_dialog">Do you want to delete the selected call logs?</string>
 
@@ -363,6 +371,7 @@
     <string name="pref_display_name">Display name</string>
     <string name="pref_help_display_name">Enter display name (optional)</string>
     <string name="pref_prefix">Prefix</string>
+    <string name="pref_prefix_desc">Prefix for your country (without the +)</string>
     <string name="pref_transport">Transport</string>
     <string name="pref_transport_udp">UDP</string>
     <string name="pref_transport_tcp">TCP</string>
@@ -381,6 +390,9 @@
     <string name="pref_tunnel_title">Tunnel</string>
     <string name="pref_tunnel_host">Hostname</string>
     <string name="pref_tunnel_port">Port</string>
+    <string name="pref_tunnel_dual_mode">Enable dual mode</string>
+    <string name="pref_tunnel_host_2">Hostname (2nd server for dual mode)</string>
+    <string name="pref_tunnel_port_2">Port (2nd server for dual mode)</string>
     <string name="pref_tunnel_mode">Mode</string>
     <!--do not change order without changing corresponding entry_values in non_localizable_strings.xml-->
     <string-array name="tunnel_mode_entries">
@@ -391,7 +403,7 @@
     </string-array>
     <string name="pref_none">None</string>
     <string name="pref_preferences_title">Preferences</string>
-    <string name="pref_video_enable_title">Enable Video</string>
+    <string name="pref_video_enable_title">Enable video</string>
 
     <!-- Audio settings -->
     <string name="pref_audio_title">Audio</string>
@@ -411,6 +423,7 @@
 
     <!-- Video settings -->
     <string name="pref_video_title">Video</string>
+    <string name="pref_video_camera_device">Camera</string>
     <string name="pref_overlay">Video overlay</string>
     <string name="pref_overlay_summary">Display call video in overlay when outside the application</string>
     <string name="pref_video_use_front_camera_title">Use front camera</string>
@@ -421,9 +434,16 @@
     <string name="pref_video_preset">Video preset</string>
     <string name="pref_preferred_video_size">Preferred video size</string>
     <string name="pref_preferred_fps">Preferred FPS</string>
-
+    <string name="pref_preview_video">Display camera preview on dialer</string>
     <string name="pref_bandwidth_limit">Bandwidth limit in kbits/s</string>
     <string name="pref_video_codecs_title">Codecs</string>
+
+    <!-- Contact settings -->
+    <string name="pref_contact_sync_title">Presence information in native contact</string>
+    <string name="pref_contact_sync_subtitle">Inserting information shortcuts from the Linphone contact into native Android contacts</string>
+    <string name="pref_contact_title">Contact</string>
+    <string name="pref_contact_display_contact_organization_title">Display contact organization</string>
+    <string name="pref_create_contact_shortcuts">Create shortcuts in launcher</string>
 
     <!-- Call settings -->
     <string name="pref_call_title">Call</string>
@@ -437,6 +457,9 @@
     <string name="pref_voice_mail">Voice mail URI</string>
     <string name="pref_dialer_call">Use Linphone as default phone app</string>
     <string name="pref_accept_early_media">Accept early-media</string>
+    <string name="pref_grant_read_dnd_settings_permission_title">Do Not Disturb settings</string>
+    <string name="pref_grant_read_dnd_settings_permission_desc">We need you to grant use the access to the Do Not Disturb settings to correctly ring or not depending on the current policy</string>
+    <string name="pref_media_encryption_mandatory_title">Media encryption mandatory</string>
 
     <!-- Chat settings -->
     <string name="pref_chat_title">Chat</string>
@@ -452,6 +475,9 @@
     <string name="pref_auto_download_disabled">Never</string>
     <string name="pref_auto_download_always">Always</string>
     <string name="pref_auto_download_under_size">If lighter than max size</string>
+    <string name="pref_android_app_hide_empty_chat_rooms_title">Hide empty chat rooms</string>
+    <string name="pref_android_app_hide_chat_rooms_from_removed_proxies_title">Hide chat rooms from removed proxy configs</string>
+    <string name="pref_android_app_hide_chat_rooms_from_removed_proxies_desc">If you have missing chat rooms, try to uncheck this setting</string>
 
     <!-- Network settings -->
     <string name="pref_network_title">Network</string>
@@ -484,6 +510,7 @@
     <string name="pref_friendlist_subscribe">Friendlist subscribe</string>
     <string name="pref_background_mode">Background mode</string>
     <string name="pref_background_mode_desc">Show a notification to keep the app alive</string>
+    <string name="pref_background_mode_warning_desc">Linphone has been restricted for background usage, please authorize it first</string>
     <string name="pref_animation_enable_title">Enable Animations</string>
     <string name="pref_service_notification">Enable service notification</string>
     <string name="pref_autostart">Start at boot time</string>
@@ -496,6 +523,8 @@
     <string name="pref_primary_account_title">Primary account</string>
     <string name="pref_display_name_title">Display name</string>
     <string name="pref_user_name_title">Username</string>
+    <string name="pref_log_collection_sharing_server_title">Logs upload server</string>
+    <string name="pref_log_collection_sharing_server_desc">Do not edit unless you know what you are doing!</string>
 
     <!-- Audio hack settings -->
     <string name="pref_audio_hacks_title">Audio hacks</string>

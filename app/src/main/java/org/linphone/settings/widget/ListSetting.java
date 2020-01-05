@@ -1,23 +1,23 @@
-package org.linphone.settings.widget;
-
 /*
-ListSetting.java
-Copyright (C) 2019 Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.settings.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -33,9 +33,9 @@ import java.util.List;
 import org.linphone.R;
 
 public class ListSetting extends BasicSetting implements AdapterView.OnItemSelectedListener {
-    protected Spinner mSpinner;
-    protected List<String> mItems;
-    protected List<String> mItemsValues;
+    private Spinner mSpinner;
+    private List<String> mItems;
+    private List<String> mItemsValues;
 
     public ListSetting(Context context) {
         super(context);
@@ -54,7 +54,9 @@ public class ListSetting extends BasicSetting implements AdapterView.OnItemSelec
     }
 
     protected void inflateView() {
-        mView = LayoutInflater.from(mContext).inflate(R.layout.settings_widget_list, this, true);
+        mView =
+                LayoutInflater.from(getContext())
+                        .inflate(R.layout.settings_widget_list, this, true);
     }
 
     protected void init(@Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -67,7 +69,8 @@ public class ListSetting extends BasicSetting implements AdapterView.OnItemSelec
 
         if (attrs != null) {
             TypedArray a =
-                    mContext.getTheme()
+                    getContext()
+                            .getTheme()
                             .obtainStyledAttributes(
                                     attrs, R.styleable.Settings, defStyleAttr, defStyleRes);
             try {
@@ -92,7 +95,7 @@ public class ListSetting extends BasicSetting implements AdapterView.OnItemSelec
         mItems = list;
         mItemsValues = valuesList;
         ArrayAdapter<String> dataAdapter =
-                new ArrayAdapter<>(mContext, android.R.layout.simple_spinner_item, list);
+                new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, list);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSpinner.setAdapter(dataAdapter);
     }

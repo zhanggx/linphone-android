@@ -1,25 +1,24 @@
+/*
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.linphone.settings;
 
-/*
-NetworkSettingsFragment.java
-Copyright (C) 2019 Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-
-import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
@@ -27,10 +26,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.Nullable;
-import org.linphone.LinphoneActivity;
 import org.linphone.R;
 import org.linphone.core.tools.Log;
-import org.linphone.fragments.FragmentsAvailable;
 import org.linphone.settings.widget.BasicSetting;
 import org.linphone.settings.widget.SettingListenerBase;
 import org.linphone.settings.widget.SwitchSetting;
@@ -38,9 +35,9 @@ import org.linphone.settings.widget.TextSetting;
 import org.linphone.utils.DeviceUtils;
 import org.linphone.utils.PushNotificationUtils;
 
-public class NetworkSettingsFragment extends Fragment {
-    protected View mRootView;
-    protected LinphonePreferences mPrefs;
+public class NetworkSettingsFragment extends SettingsFragment {
+    private View mRootView;
+    private LinphonePreferences mPrefs;
 
     private SwitchSetting mWifiOnly, mIpv6, mPush, mRandomPorts, mIce, mTurn;
     private TextSetting mSipPort, mStunServer, mTurnUsername, mTurnPassword;
@@ -62,17 +59,11 @@ public class NetworkSettingsFragment extends Fragment {
         super.onResume();
 
         mPrefs = LinphonePreferences.instance();
-        if (LinphoneActivity.isInstanciated()) {
-            LinphoneActivity.instance()
-                    .selectMenu(
-                            FragmentsAvailable.SETTINGS_SUBLEVEL,
-                            getString(R.string.pref_network_title));
-        }
 
         updateValues();
     }
 
-    protected void loadSettings() {
+    private void loadSettings() {
         mWifiOnly = mRootView.findViewById(R.id.pref_wifi_only);
 
         mIpv6 = mRootView.findViewById(R.id.pref_ipv6);
@@ -101,7 +92,7 @@ public class NetworkSettingsFragment extends Fragment {
                 mRootView.findViewById(R.id.pref_android_battery_protected_settings);
     }
 
-    protected void setListeners() {
+    private void setListeners() {
         mWifiOnly.setListener(
                 new SettingListenerBase() {
                     @Override
@@ -205,9 +196,7 @@ public class NetworkSettingsFragment extends Fragment {
                     @Override
                     public void onClicked() {
                         mPrefs.powerSaverDialogPrompted(true);
-                        Intent intent =
-                                DeviceUtils.getDevicePowerManagerIntent(
-                                        LinphoneActivity.instance());
+                        Intent intent = DeviceUtils.getDevicePowerManagerIntent(getActivity());
                         if (intent != null) {
                             startActivity(intent);
                         }
@@ -215,7 +204,7 @@ public class NetworkSettingsFragment extends Fragment {
                 });
     }
 
-    protected void updateValues() {
+    private void updateValues() {
         mWifiOnly.setChecked(mPrefs.isWifiOnlyEnabled());
 
         mIpv6.setChecked(mPrefs.isUsingIpv6());
@@ -242,9 +231,7 @@ public class NetworkSettingsFragment extends Fragment {
         mTurnPassword.setEnabled(mPrefs.isTurnEnabled());
 
         mAndroidBatterySaverSettings.setVisibility(
-                DeviceUtils.hasDevicePowerManager(LinphoneActivity.instance())
-                        ? View.VISIBLE
-                        : View.GONE);
+                DeviceUtils.hasDevicePowerManager(getActivity()) ? View.VISIBLE : View.GONE);
 
         setListeners();
     }

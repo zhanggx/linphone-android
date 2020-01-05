@@ -8,10 +8,10 @@
 
     <fragment
         android:id="@+id/status"
-        android:name="org.linphone.fragments.StatusFragment"
+        android:name="org.linphone.call.CallStatusBarFragment"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        tools:layout="@layout/status" />
+        tools:layout="@layout/status_bar" />
 
     <RelativeLayout
         android:id="@+id/top_bar"
@@ -48,7 +48,7 @@
             android:gravity="center_vertical|center_horizontal"
             android:paddingTop="5dp" />
 
-        <TextView
+        <org.linphone.views.MarqueeTextView
             android:id="@+id/contact_number"
             style="@style/sip_uri_font"
             android:layout_width="wrap_content"
@@ -56,12 +56,10 @@
             android:layout_below="@id/contact_name"
             android:layout_centerHorizontal="true"
             android:layout_gravity="center_vertical|center_horizontal"
-            android:ellipsize="end"
-            android:maxLines="1"
+            android:singleLine="true"
             android:paddingBottom="10dp" />
 
         <RelativeLayout
-            android:id="@+id/avatar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/contact_number"
@@ -73,12 +71,6 @@
         </RelativeLayout>
 
     </RelativeLayout>
-
-    <TextureView
-        android:id="@+id/videoSurface"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/menu"

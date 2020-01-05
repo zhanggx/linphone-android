@@ -1,25 +1,25 @@
+/*
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.linphone.settings;
 
-/*
-VideoSettingsFragment.java
-Copyright (C) 2019 Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-
-import android.app.Fragment;
+import android.Manifest;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
@@ -30,7 +30,6 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import org.linphone.LinphoneActivity;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
 import org.linphone.core.Core;
@@ -38,21 +37,22 @@ import org.linphone.core.Factory;
 import org.linphone.core.PayloadType;
 import org.linphone.core.VideoDefinition;
 import org.linphone.core.tools.Log;
-import org.linphone.fragments.FragmentsAvailable;
+import org.linphone.mediastream.Version;
 import org.linphone.settings.widget.ListSetting;
 import org.linphone.settings.widget.SettingListenerBase;
 import org.linphone.settings.widget.SwitchSetting;
 import org.linphone.settings.widget.TextSetting;
 
-public class VideoSettingsFragment extends Fragment {
-    protected View mRootView;
-    protected LinphonePreferences mPrefs;
+public class VideoSettingsFragment extends SettingsFragment {
+    private View mRootView;
+    private LinphonePreferences mPrefs;
 
-    private SwitchSetting mEnable, mAutoInitiate, mAutoAccept, mOverlay;
+    private SwitchSetting mEnable, mAutoInitiate, mAutoAccept, mOverlay, mVideoPreview;
     private ListSetting mPreset, mSize, mFps;
     private TextSetting mBandwidth;
     private LinearLayout mVideoCodecs;
     private TextView mVideoCodecsHeader;
+    private ListSetting mCameraDevices;
 
     @Nullable
     @Override
@@ -70,22 +70,21 @@ public class VideoSettingsFragment extends Fragment {
         super.onResume();
 
         mPrefs = LinphonePreferences.instance();
-        if (LinphoneActivity.isInstanciated()) {
-            LinphoneActivity.instance()
-                    .selectMenu(
-                            FragmentsAvailable.SETTINGS_SUBLEVEL,
-                            getString(R.string.pref_video_title));
-        }
 
         updateValues();
     }
 
-    protected void loadSettings() {
+    private void loadSettings() {
         mEnable = mRootView.findViewById(R.id.pref_video_enable);
+
+        mVideoPreview = mRootView.findViewById(R.id.pref_video_preview);
 
         mAutoInitiate = mRootView.findViewById(R.id.pref_video_initiate_call_with_video);
 
         mAutoAccept = mRootView.findViewById(R.id.pref_video_automatically_accept_video);
+
+        mCameraDevices = mRootView.findViewById(R.id.pref_video_camera_device);
+        initCameraDevicesList();
 
         mOverlay = mRootView.findViewById(R.id.pref_overlay);
 
@@ -104,17 +103,36 @@ public class VideoSettingsFragment extends Fragment {
         mVideoCodecsHeader = mRootView.findViewById(R.id.pref_video_codecs_header);
     }
 
-    protected void setListeners() {
+    private void setListeners() {
         mEnable.setListener(
                 new SettingListenerBase() {
                     @Override
                     public void onBoolValueChanged(boolean newValue) {
                         mPrefs.enableVideo(newValue);
                         if (!newValue) {
+                            mVideoPreview.setChecked(false);
                             mAutoAccept.setChecked(false);
                             mAutoInitiate.setChecked(false);
                         }
                         updateVideoSettingsVisibility(newValue);
+                    }
+                });
+
+        mVideoPreview.setListener(
+                new SettingListenerBase() {
+                    @Override
+                    public void onBoolValueChanged(boolean newValue) {
+                        if (newValue) {
+                            if (!((SettingsActivity) getActivity())
+                                    .checkPermission(Manifest.permission.CAMERA)) {
+                                ((SettingsActivity) getActivity())
+                                        .requestPermissionIfNotGranted(Manifest.permission.CAMERA);
+                            } else {
+                                mPrefs.setVideoPreviewEnabled(true);
+                            }
+                        } else {
+                            mPrefs.setVideoPreviewEnabled(false);
+                        }
                     }
                 });
 
@@ -134,11 +152,22 @@ public class VideoSettingsFragment extends Fragment {
                     }
                 });
 
+        mCameraDevices.setListener(
+                new SettingListenerBase() {
+                    @Override
+                    public void onListValueChanged(int position, String newLabel, String newValue) {
+                        mPrefs.setCameraDevice(newValue);
+                    }
+                });
+
         mOverlay.setListener(
                 new SettingListenerBase() {
                     @Override
                     public void onBoolValueChanged(boolean newValue) {
-                        mPrefs.enableOverlay(newValue);
+                        mPrefs.enableOverlay(
+                                newValue
+                                        && ((SettingsActivity) getActivity())
+                                                .checkAndRequestOverlayPermission());
                     }
                 });
 
@@ -186,15 +215,24 @@ public class VideoSettingsFragment extends Fragment {
                 });
     }
 
-    protected void updateValues() {
+    private void updateValues() {
         mEnable.setChecked(mPrefs.isVideoEnabled());
         updateVideoSettingsVisibility(mPrefs.isVideoEnabled());
+
+        mVideoPreview.setChecked(mPrefs.isVideoPreviewEnabled());
 
         mAutoInitiate.setChecked(mPrefs.shouldInitiateVideoCall());
 
         mAutoAccept.setChecked(mPrefs.shouldAutomaticallyAcceptVideoRequests());
 
+        mCameraDevices.setValue(mPrefs.getCameraDevice());
+
         mOverlay.setChecked(mPrefs.isOverlayEnabled());
+        if (Version.sdkAboveOrEqual(Version.API26_O_80)
+                && getResources().getBoolean(R.bool.allow_pip_while_video_call)) {
+            // Disable overlay and use PIP feature
+            mOverlay.setVisibility(View.GONE);
+        }
 
         mBandwidth.setValue(mPrefs.getBandwidthLimit());
         mBandwidth.setVisibility(
@@ -241,7 +279,7 @@ public class VideoSettingsFragment extends Fragment {
 
     private void populateVideoCodecs() {
         mVideoCodecs.removeAllViews();
-        Core core = LinphoneManager.getLcIfManagerNotDestroyedOrNull();
+        Core core = LinphoneManager.getCore();
         if (core != null) {
             for (final PayloadType pt : core.getVideoPayloadTypes()) {
                 final SwitchSetting codec = new SwitchSetting(getActivity());
@@ -265,8 +303,16 @@ public class VideoSettingsFragment extends Fragment {
     }
 
     private void updateVideoSettingsVisibility(boolean show) {
+        mVideoPreview.setVisibility(
+                show
+                                && getResources().getBoolean(R.bool.isTablet)
+                                && getResources()
+                                        .getBoolean(R.bool.show_camera_preview_on_dialer_on_tablets)
+                        ? View.VISIBLE
+                        : View.GONE);
         mAutoInitiate.setVisibility(show ? View.VISIBLE : View.GONE);
         mAutoAccept.setVisibility(show ? View.VISIBLE : View.GONE);
+        mCameraDevices.setVisibility(show ? View.VISIBLE : View.GONE);
         mOverlay.setVisibility(show ? View.VISIBLE : View.GONE);
         mBandwidth.setVisibility(show ? View.VISIBLE : View.GONE);
         mPreset.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -274,5 +320,31 @@ public class VideoSettingsFragment extends Fragment {
         mFps.setVisibility(show ? View.VISIBLE : View.GONE);
         mVideoCodecs.setVisibility(show ? View.VISIBLE : View.GONE);
         mVideoCodecsHeader.setVisibility(show ? View.VISIBLE : View.GONE);
+
+        if (show) {
+            if (Version.sdkAboveOrEqual(Version.API26_O_80)
+                    && getResources().getBoolean(R.bool.allow_pip_while_video_call)) {
+                // Disable overlay and use PIP feature
+                mOverlay.setVisibility(View.GONE);
+            }
+            mBandwidth.setVisibility(
+                    mPrefs.getVideoPreset().equals("custom") ? View.VISIBLE : View.GONE);
+            mFps.setVisibility(mPrefs.getVideoPreset().equals("custom") ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void initCameraDevicesList() {
+        List<String> entries = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+
+        Core core = LinphoneManager.getCore();
+        if (core != null) {
+            for (String camera : core.getVideoDevicesList()) {
+                entries.add(camera);
+                values.add(camera);
+            }
+        }
+
+        mCameraDevices.setItems(entries, values);
     }
 }

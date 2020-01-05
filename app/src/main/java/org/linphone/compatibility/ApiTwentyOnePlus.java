@@ -1,23 +1,23 @@
-package org.linphone.compatibility;
-
 /*
-ApiTwentyOnePlus.java
-Copyright (C) 2017  Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.compatibility;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -33,7 +33,6 @@ import org.linphone.R;
 @TargetApi(21)
 class ApiTwentyOnePlus {
 
-    @SuppressWarnings("deprecation")
     public static Notification createMessageNotification(
             Context context,
             int msgCount,
@@ -92,11 +91,39 @@ class ApiTwentyOnePlus {
                 .setCategory(Notification.CATEGORY_CALL)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setPriority(Notification.PRIORITY_HIGH)
+                .setOngoing(true)
                 .setLights(
                         ContextCompat.getColor(context, R.color.notification_led_color),
                         context.getResources().getInteger(R.integer.notification_ms_on),
                         context.getResources().getInteger(R.integer.notification_ms_off))
                 .setShowWhen(true)
+                .build();
+    }
+
+    public static Notification createIncomingCallNotification(
+            Context context,
+            Bitmap contactIcon,
+            String contactName,
+            String sipUri,
+            PendingIntent intent) {
+
+        return new Notification.Builder(context)
+                .setContentTitle(contactName)
+                .setContentText(context.getString(R.string.incall_notif_incoming))
+                .setSmallIcon(R.drawable.topbar_call_notification)
+                .setAutoCancel(false)
+                .setContentIntent(intent)
+                .setLargeIcon(contactIcon)
+                .setCategory(Notification.CATEGORY_CALL)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setOngoing(true)
+                .setLights(
+                        ContextCompat.getColor(context, R.color.notification_led_color),
+                        context.getResources().getInteger(R.integer.notification_ms_on),
+                        context.getResources().getInteger(R.integer.notification_ms_off))
+                .setShowWhen(true)
+                .setFullScreenIntent(intent, true)
                 .build();
     }
 
@@ -108,7 +135,8 @@ class ApiTwentyOnePlus {
             int level,
             Bitmap largeIcon,
             PendingIntent intent,
-            int priority) {
+            int priority,
+            boolean ongoing) {
         Notification notif;
 
         if (largeIcon != null) {
@@ -129,6 +157,7 @@ class ApiTwentyOnePlus {
                             .setWhen(System.currentTimeMillis())
                             .setPriority(priority)
                             .setShowWhen(true)
+                            .setOngoing(ongoing)
                             .build();
         } else {
             notif =
@@ -154,7 +183,7 @@ class ApiTwentyOnePlus {
     }
 
     public static Notification createMissedCallNotification(
-            Context context, String title, String text, PendingIntent intent) {
+            Context context, String title, String text, PendingIntent intent, int count) {
 
         return new Notification.Builder(context)
                 .setContentTitle(title)
@@ -172,6 +201,7 @@ class ApiTwentyOnePlus {
                 .setPriority(Notification.PRIORITY_HIGH)
                 .setWhen(System.currentTimeMillis())
                 .setShowWhen(true)
+                .setNumber(count)
                 .build();
     }
 

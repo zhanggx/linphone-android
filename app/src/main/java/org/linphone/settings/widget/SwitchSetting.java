@@ -1,23 +1,23 @@
-package org.linphone.settings.widget;
-
 /*
-SwitchSetting.java
-Copyright (C) 2019 Belledonne Communications, Grenoble, France
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+ * Copyright (c) 2010-2019 Belledonne Communications SARL.
+ *
+ * This file is part of linphone-android
+ * (see https://www.linphone.org).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.linphone.settings.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -30,7 +30,7 @@ import androidx.annotation.Nullable;
 import org.linphone.R;
 
 public class SwitchSetting extends BasicSetting {
-    protected Switch mSwitch;
+    private Switch mSwitch;
 
     public SwitchSetting(Context context) {
         super(context);
@@ -49,7 +49,9 @@ public class SwitchSetting extends BasicSetting {
     }
 
     protected void inflateView() {
-        mView = LayoutInflater.from(mContext).inflate(R.layout.settings_widget_switch, this, true);
+        mView =
+                LayoutInflater.from(getContext())
+                        .inflate(R.layout.settings_widget_switch, this, true);
     }
 
     protected void init(@Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
@@ -91,7 +93,7 @@ public class SwitchSetting extends BasicSetting {
         return mSwitch.isChecked();
     }
 
-    public void toggle() {
+    private void toggle() {
         mSwitch.toggle();
     }
 }
