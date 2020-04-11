@@ -49,6 +49,7 @@ import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import org.linphone.LinphoneContext;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
 import org.linphone.activities.LinphoneGenericActivity;
@@ -94,6 +95,8 @@ public class CallActivity extends LinphoneGenericActivity
         @Override
         public void run() {
             // Make sure that at the time this is executed this is still required
+            if (!LinphoneContext.isReady()) return;
+
             Call call = LinphoneManager.getCore().getCurrentCall();
             if (call != null && call.getCurrentParams().videoEnabled()) {
                 CallActivity activity = mWeakCallActivity.get();
@@ -487,7 +490,7 @@ public class CallActivity extends LinphoneGenericActivity
             finish();
         }
 
-        LinphoneService.instance().destroyOverlay();
+        if (LinphoneService.isReady()) LinphoneService.instance().destroyOverlay();
     }
 
     @Override
@@ -502,7 +505,7 @@ public class CallActivity extends LinphoneGenericActivity
             Call call = core.getCurrentCall();
             if (call.getState() == Call.State.StreamsRunning) {
                 // Prevent overlay creation if video call is paused by remote
-                LinphoneService.instance().createOverlay();
+                if (LinphoneService.isReady()) LinphoneService.instance().createOverlay();
             }
         }
 
@@ -747,6 +750,11 @@ public class CallActivity extends LinphoneGenericActivity
         boolean isBluetoothAvailable = mAudioManager.isBluetoothHeadsetConnected();
         mSpeaker.setVisibility(isBluetoothAvailable ? View.GONE : View.VISIBLE);
         mAudioRoute.setVisibility(isBluetoothAvailable ? View.VISIBLE : View.GONE);
+        if (!isBluetoothAvailable) {
+            mRouteBluetooth.setVisibility(View.GONE);
+            mRouteSpeaker.setVisibility(View.GONE);
+            mRouteEarpiece.setVisibility(View.GONE);
+        }
 
         mVideo.setEnabled(
                 LinphonePreferences.instance().isVideoEnabled()
@@ -924,7 +932,7 @@ public class CallActivity extends LinphoneGenericActivity
     private void goBackToDialer() {
         Intent intent = new Intent();
         intent.setClass(this, DialerActivity.class);
-        intent.putExtra("Transfer", false);
+        intent.putExtra("isTransfer", false);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(intent);
     }
@@ -932,7 +940,7 @@ public class CallActivity extends LinphoneGenericActivity
     private void goBackToDialerAndDisplayTransferButton() {
         Intent intent = new Intent();
         intent.setClass(this, DialerActivity.class);
-        intent.putExtra("Transfer", true);
+        intent.putExtra("isTransfer", true);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(intent);
     }

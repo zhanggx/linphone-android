@@ -8,7 +8,6 @@ static def firebaseEnabled() {
     File googleFile = new File('app/google-services.json')
     return googleFile.exists()
 }
-
 static def isLocalDebugAarAvailable() {
     File debugAar = new File('linphone-sdk-android/linphone-sdk-android-debug.aar')
     return debugAar.exists()
@@ -24,7 +23,7 @@ static def isLocalAarAvailable() {
 }
 
 task getGitVersion() {
-    def gitVersion = "4.2"
+    def gitVersion = "4.3.0"
     def gitVersionStream = new ByteArrayOutputStream()
     def gitCommitsCount = new ByteArrayOutputStream()
     def gitCommitHash = new ByteArrayOutputStream()
@@ -43,7 +42,11 @@ task getGitVersion() {
             standardOutput = gitCommitHash
         }
 
-        gitVersion = gitVersionStream.toString().trim() + "." + gitCommitsCount.toString().trim() + "+" + gitCommitHash.toString().trim()
+        if (gitCommitsCount.toString().toInteger() == 0) {
+            gitVersion = gitVersionStream.toString().trim()
+        } else {
+            gitVersion = gitVersionStream.toString().trim() + "." + gitCommitsCount.toString().trim() + "+" + gitCommitHash.toString().trim()
+        }
         println("Git version: " + gitVersion)
     } catch (Exception e) {
         println("Git not found")
@@ -73,6 +76,9 @@ excludePackage.add('**/LICENSE.txt')
 
 repositories {
     maven {
+        url file(LinphoneSdkBuildDir + '/maven_repository/')
+    }
+    maven {
         url "https://linphone.org/maven_repository"
     }
 }
@@ -88,7 +94,7 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 4213
+        versionCode 4230
         versionName "${project.version}"
         applicationId getPackageName()
         multiDexEnabled true
@@ -99,7 +105,7 @@ android {
             outputFileName = "linphone-android-${variant.buildType.name}-${project.version}.apk"
         }
 
-        if (variant.buildType.name.equals("release")) {
+        if (variant.buildType.name == "release") {
             variant.getMergedFlavor().manifestPlaceholders = [linphone_address_mime_type: "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address",
                                     linphone_file_provider: getPackageName() + ".provider"]
         } else {
@@ -168,6 +174,7 @@ android {
 }
 
 dependencies {
+    compileOnly 'org.jetbrains:annotations:19.0.0'
     if (firebaseEnabled()) {
         implementation 'com.google.firebase:firebase-messaging:19.0.1'
     }
@@ -185,7 +192,7 @@ dependencies {
             debugImplementation project(path: ":linphone-sdk-android", configuration: 'debug')
         }
     } else {
-        implementation "org.linphone:linphone-sdk-android:4.3+"
+        implementation "org.linphone:linphone-sdk-android:4.4+"
     }
 }
 if (firebaseEnabled()) {

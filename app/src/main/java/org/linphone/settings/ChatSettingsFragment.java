@@ -29,7 +29,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.Nullable;
+import org.linphone.LinphoneManager;
 import org.linphone.R;
+import org.linphone.core.ChatRoom;
 import org.linphone.core.tools.Log;
 import org.linphone.mediastream.Version;
 import org.linphone.settings.widget.BasicSetting;
@@ -44,7 +46,8 @@ public class ChatSettingsFragment extends SettingsFragment {
     private TextSetting mSharingServer, mMaxSizeForAutoDownloadIncomingFiles;
     private BasicSetting mAndroidNotificationSettings;
     private ListSetting mAutoDownloadIncomingFilesPolicy;
-    private SwitchSetting mHideEmptyRooms, mHideRemovedProxiesRooms;
+    private SwitchSetting mHideEmptyRooms, mHideRemovedProxiesRooms, mMakeDownloadedImagesPublic;
+    private SwitchSetting mEnableEphemeralBeta;
 
     @Nullable
     @Override
@@ -75,12 +78,19 @@ public class ChatSettingsFragment extends SettingsFragment {
 
         mAutoDownloadIncomingFilesPolicy = mRootView.findViewById(R.id.pref_auto_download_policy);
 
+        mMakeDownloadedImagesPublic =
+                mRootView.findViewById(
+                        R.id.pref_android_app_make_downloaded_images_visible_in_native_gallery);
+
         mAndroidNotificationSettings = mRootView.findViewById(R.id.pref_android_app_notif_settings);
 
         mHideEmptyRooms = mRootView.findViewById(R.id.pref_android_app_hide_empty_chat_rooms);
 
         mHideRemovedProxiesRooms =
                 mRootView.findViewById(R.id.pref_android_app_hide_chat_rooms_from_removed_proxies);
+
+        mEnableEphemeralBeta =
+                mRootView.findViewById(R.id.pref_android_app_enable_ephemeral_messages_beta);
     }
 
     private void setListeners() {
@@ -115,6 +125,14 @@ public class ChatSettingsFragment extends SettingsFragment {
                         } catch (NumberFormatException nfe) {
                             Log.e(nfe);
                         }
+                    }
+                });
+
+        mMakeDownloadedImagesPublic.setListener(
+                new SettingListenerBase() {
+                    @Override
+                    public void onBoolValueChanged(boolean newValue) {
+                        mPrefs.setDownloadedImagesVisibleInNativeGallery(newValue);
                     }
                 });
 
@@ -154,6 +172,19 @@ public class ChatSettingsFragment extends SettingsFragment {
                         LinphonePreferences.instance().setHideRemovedProxiesChatRooms(newValue);
                     }
                 });
+
+        mEnableEphemeralBeta.setListener(
+                new SettingListenerBase() {
+                    @Override
+                    public void onBoolValueChanged(boolean newValue) {
+                        LinphonePreferences.instance().enableEphemeralMessages(newValue);
+                        if (!newValue) {
+                            for (ChatRoom room : LinphoneManager.getCore().getChatRooms()) {
+                                room.enableEphemeral(false);
+                            }
+                        }
+                    }
+                });
     }
 
     private void updateValues() {
@@ -165,10 +196,15 @@ public class ChatSettingsFragment extends SettingsFragment {
             mAndroidNotificationSettings.setVisibility(View.GONE);
         }
 
+        mMakeDownloadedImagesPublic.setChecked(mPrefs.makeDownloadedImagesVisibleInNativeGallery());
+
         mHideEmptyRooms.setChecked(LinphonePreferences.instance().hideEmptyChatRooms());
 
         mHideRemovedProxiesRooms.setChecked(
                 LinphonePreferences.instance().hideRemovedProxiesChatRooms());
+
+        mEnableEphemeralBeta.setChecked(
+                LinphonePreferences.instance().isEphemeralMessagesEnabled());
 
         setListeners();
     }

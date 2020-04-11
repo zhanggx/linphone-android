@@ -36,6 +36,7 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
+import org.linphone.activities.MainActivity;
 import org.linphone.contacts.views.ContactAvatar;
 import org.linphone.core.Address;
 import org.linphone.core.ChatRoom;
@@ -304,7 +305,7 @@ public class ContactDetailsFragment extends Fragment implements ContactsUpdatedL
                                     @Override
                                     public void onClick(View v) {
                                         String tag = (String) v.getTag();
-                                        LinphoneManager.getCallManager().newOutgoingCall(tag, null);
+                                        ((MainActivity) getActivity()).newOutgoingCall(tag);
                                     }
                                 });
                 if (contactAddress != null) {
@@ -367,12 +368,16 @@ public class ContactDetailsFragment extends Fragment implements ContactsUpdatedL
         if (core == null) return;
 
         Address participant = Factory.instance().createAddress(tag);
+        if (participant == null) {
+            Log.e("[Contact Detail] Couldn't parse ", tag);
+            return;
+        }
         ProxyConfig defaultProxyConfig = core.getDefaultProxyConfig();
 
         if (defaultProxyConfig != null) {
             ChatRoom room =
                     core.findOneToOneChatRoom(
-                            defaultProxyConfig.getContact(), participant, isSecured);
+                            defaultProxyConfig.getIdentityAddress(), participant, isSecured);
             if (room != null) {
                 ((ContactsActivity) getActivity())
                         .showChatRoom(room.getLocalAddress(), room.getPeerAddress());

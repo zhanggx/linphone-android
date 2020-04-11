@@ -48,7 +48,10 @@ import org.linphone.R;
 import org.linphone.core.Address;
 import org.linphone.core.Call;
 import org.linphone.core.CallLog;
+import org.linphone.core.ChatMessage;
+import org.linphone.core.Content;
 import org.linphone.core.Core;
+import org.linphone.core.EventLog;
 import org.linphone.core.Factory;
 import org.linphone.core.LogCollectionState;
 import org.linphone.core.ProxyConfig;
@@ -242,20 +245,24 @@ public final class LinphoneUtils {
         }
 
         if (username.contains("@")) {
-            String domain = username.split("@")[1];
-            ProxyConfig lpc = core.getDefaultProxyConfig();
-            if (lpc != null) {
-                if (domain.equals(lpc.getDomain())) {
-                    return username.split("@")[0];
-                }
-            } else {
-                if (domain.equals(
-                        LinphoneContext.instance()
-                                .getApplicationContext()
-                                .getString(R.string.default_domain))) {
-                    return username.split("@")[0];
+            String[] split = username.split("@");
+            if (split.length > 1) {
+                String domain = split[1];
+                ProxyConfig lpc = core.getDefaultProxyConfig();
+                if (lpc != null) {
+                    if (domain.equals(lpc.getDomain())) {
+                        return split[0];
+                    }
+                } else {
+                    if (domain.equals(
+                            LinphoneContext.instance()
+                                    .getApplicationContext()
+                                    .getString(R.string.default_domain))) {
+                        return split[0];
+                    }
                 }
             }
+            return split[0];
         }
         return username;
     }
@@ -409,5 +416,22 @@ public final class LinphoneUtils {
         TextView customText = dialog.findViewById(R.id.dialog_message);
         customText.setText(text);
         return dialog;
+    }
+
+    public static void deleteFileContentIfExists(EventLog eventLog) {
+        if (eventLog.getType() == EventLog.Type.ConferenceChatMessage) {
+            ChatMessage message = eventLog.getChatMessage();
+            if (message != null) {
+                for (Content content : message.getContents()) {
+                    if (content.isFile() && content.getFilePath() != null) {
+                        Log.w(
+                                "[Linphone Utils] Chat message is being deleted, file ",
+                                content.getFilePath(),
+                                " will also be deleted");
+                        FileUtils.deleteFile(content.getFilePath());
+                    }
+                }
+            }
+        }
     }
 }

@@ -25,6 +25,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.KeyguardManager;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -69,6 +70,7 @@ import org.linphone.fragments.EmptyFragment;
 import org.linphone.fragments.StatusBarFragment;
 import org.linphone.history.HistoryActivity;
 import org.linphone.menu.SideMenuFragment;
+import org.linphone.service.LinphoneService;
 import org.linphone.settings.LinphonePreferences;
 import org.linphone.settings.SettingsActivity;
 import org.linphone.utils.DeviceUtils;
@@ -419,11 +421,19 @@ public abstract class MainActivity extends LinphoneGenericActivity
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        try {
+            startActivity(intent);
+        } catch (IllegalStateException ise) {
+            Log.e("[Main Activity] Can't start home activity: ", ise);
+        }
     }
 
     private void quit() {
         goHomeAndClearStack();
+        if (LinphoneService.isReady()
+                && LinphonePreferences.instance().getServiceNotificationVisibility()) {
+            LinphoneService.instance().stopSelf();
+        }
     }
 
     // Tab, Top and Status bars
@@ -546,8 +556,10 @@ public abstract class MainActivity extends LinphoneGenericActivity
             if (permissions[i].equals(Manifest.permission.READ_CONTACTS)
                     || permissions[i].equals(Manifest.permission.WRITE_CONTACTS)) {
                 if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    ContactsManager.getInstance().enableContactsAccess();
-                    ContactsManager.getInstance().initializeContactManager();
+                    if (LinphoneContext.isReady()) {
+                        ContactsManager.getInstance().enableContactsAccess();
+                        ContactsManager.getInstance().initializeContactManager();
+                    }
                 }
             } else if (permissions[i].equals(Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 boolean enableRingtone = grantResults[i] == PackageManager.PERMISSION_GRANTED;
@@ -623,6 +635,18 @@ public abstract class MainActivity extends LinphoneGenericActivity
             startActivity(new Intent(this, CallOutgoingActivity.class));
         } else {
             startActivity(new Intent(this, CallActivity.class));
+        }
+    }
+
+    public void newOutgoingCall(String to) {
+        if (LinphoneManager.getCore().getCallsNb() > 0) {
+            Intent intent = new Intent(this, DialerActivity.class);
+            intent.addFlags(
+                    Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            intent.putExtra("SipUri", to);
+            this.startActivity(intent);
+        } else {
+            LinphoneManager.getCallManager().newOutgoingCall(to, null);
         }
     }
 
@@ -774,8 +798,13 @@ public abstract class MainActivity extends LinphoneGenericActivity
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        startActivity(
-                                new Intent("android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS"));
+                        try {
+                            startActivity(
+                                    new Intent(
+                                            "android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS"));
+                        } catch (ActivityNotFoundException anfe) {
+                            Log.e("[Main Activity] Activity not found exception: ", anfe);
+                        }
                         dialog.dismiss();
                     }
                 });

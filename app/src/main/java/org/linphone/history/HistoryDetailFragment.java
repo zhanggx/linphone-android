@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
+import org.linphone.activities.MainActivity;
 import org.linphone.contacts.ContactsManager;
 import org.linphone.contacts.LinphoneContact;
 import org.linphone.contacts.views.ContactAvatar;
@@ -80,7 +81,7 @@ public class HistoryDetailFragment extends Fragment {
                 new OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        LinphoneManager.getCallManager().newOutgoingCall(mSipUri, mDisplayName);
+                        ((MainActivity) getActivity()).newOutgoingCall(mSipUri);
                     }
                 });
 
@@ -260,12 +261,16 @@ public class HistoryDetailFragment extends Fragment {
         if (core == null) return;
 
         Address participant = Factory.instance().createAddress(mSipUri);
+        if (participant == null) {
+            Log.e("[History Detail] Couldn't parse ", mSipUri);
+            return;
+        }
         ProxyConfig defaultProxyConfig = core.getDefaultProxyConfig();
 
         if (defaultProxyConfig != null) {
             ChatRoom room =
                     core.findOneToOneChatRoom(
-                            defaultProxyConfig.getContact(), participant, isSecured);
+                            defaultProxyConfig.getIdentityAddress(), participant, isSecured);
             if (room != null) {
                 ((HistoryActivity) getActivity())
                         .showChatRoom(room.getLocalAddress(), room.getPeerAddress());

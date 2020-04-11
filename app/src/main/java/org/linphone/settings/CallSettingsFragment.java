@@ -20,6 +20,7 @@
 package org.linphone.settings;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -143,8 +144,10 @@ public class CallSettingsFragment extends SettingsFragment {
                 new SettingListenerBase() {
                     @Override
                     public void onBoolValueChanged(boolean newValue) {
-                        if (newValue) mDtmfRfc2833.setChecked(false);
                         mPrefs.sendDTMFsAsSipInfo(newValue);
+                        if (!newValue && !mDtmfRfc2833.isChecked()) {
+                            mDtmfRfc2833.setChecked(true);
+                        }
                     }
                 });
 
@@ -152,8 +155,10 @@ public class CallSettingsFragment extends SettingsFragment {
                 new SettingListenerBase() {
                     @Override
                     public void onBoolValueChanged(boolean newValue) {
-                        if (newValue) mDtmfSipInfo.setChecked(false);
                         mPrefs.sendDtmfsAsRfc2833(newValue);
+                        if (!newValue && !mDtmfSipInfo.isChecked()) {
+                            mDtmfRfc2833.setChecked(true);
+                        }
                     }
                 });
 
@@ -223,8 +228,13 @@ public class CallSettingsFragment extends SettingsFragment {
                 new SettingListenerBase() {
                     @Override
                     public void onClicked() {
-                        startActivity(
-                                new Intent("android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS"));
+                        try {
+                            startActivity(
+                                    new Intent(
+                                            "android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS"));
+                        } catch (ActivityNotFoundException anfe) {
+                            Log.e("[Call Settings] Activity not found: ", anfe);
+                        }
                     }
                 });
 

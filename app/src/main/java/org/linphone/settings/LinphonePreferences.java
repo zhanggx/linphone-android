@@ -189,6 +189,7 @@ public class LinphonePreferences {
 
     // App settings
     public boolean isFirstLaunch() {
+        if (getConfig() == null) return true;
         return getConfig().getBool("app", "first_launch", true);
     }
 
@@ -599,12 +600,14 @@ public class LinphonePreferences {
 
     public String getStunServer() {
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return null;
         return nat.getStunServer();
     }
 
     public void setStunServer(String stun) {
         if (getLc() == null) return;
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return;
         nat.setStunServer(stun);
 
         getLc().setNatPolicy(nat);
@@ -612,12 +615,14 @@ public class LinphonePreferences {
 
     public boolean isIceEnabled() {
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return false;
         return nat.iceEnabled();
     }
 
     public void setIceEnabled(boolean enabled) {
         if (getLc() == null) return;
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return;
         nat.enableIce(enabled);
         if (enabled) nat.enableStun(true);
         getLc().setNatPolicy(nat);
@@ -625,24 +630,28 @@ public class LinphonePreferences {
 
     public boolean isTurnEnabled() {
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return false;
         return nat.turnEnabled();
     }
 
     public void setTurnEnabled(boolean enabled) {
         if (getLc() == null) return;
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return;
         nat.enableTurn(enabled);
         getLc().setNatPolicy(nat);
     }
 
     public String getTurnUsername() {
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return null;
         return nat.getStunServerUsername();
     }
 
     public void setTurnUsername(String username) {
         if (getLc() == null) return;
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return;
         AuthInfo authInfo = getLc().findAuthInfo(null, nat.getStunServerUsername(), null);
 
         if (authInfo != null) {
@@ -663,6 +672,7 @@ public class LinphonePreferences {
     public void setTurnPassword(String password) {
         if (getLc() == null) return;
         NatPolicy nat = getOrCreateNatPolicy();
+        if (nat == null) return;
         AuthInfo authInfo = getLc().findAuthInfo(null, nat.getStunServerUsername(), null);
 
         if (authInfo != null) {
@@ -1189,6 +1199,16 @@ public class LinphonePreferences {
         getLc().setMaxSizeForAutoDownloadIncomingFiles(size);
     }
 
+    public void setDownloadedImagesVisibleInNativeGallery(boolean visible) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "make_downloaded_images_public_in_gallery", visible);
+    }
+
+    public boolean makeDownloadedImagesVisibleInNativeGallery() {
+        if (getConfig() == null) return false;
+        return getConfig().getBool("app", "make_downloaded_images_public_in_gallery", true);
+    }
+
     public boolean hasPowerSaverDialogBeenPrompted() {
         if (getConfig() == null) return false;
         return getConfig().getBool("app", "android_power_saver_dialog", false);
@@ -1291,5 +1311,15 @@ public class LinphonePreferences {
     public void setHideRemovedProxiesChatRooms(boolean hide) {
         if (getConfig() == null) return;
         getConfig().setBool("misc", "hide_chat_rooms_from_removed_proxies", hide);
+    }
+
+    public void enableEphemeralMessages(boolean enable) {
+        if (getConfig() == null) return;
+        getConfig().setBool("app", "ephemeral", enable);
+    }
+
+    public boolean isEphemeralMessagesEnabled() {
+        if (getConfig() == null) return true;
+        return getConfig().getBool("app", "ephemeral", false);
     }
 }
