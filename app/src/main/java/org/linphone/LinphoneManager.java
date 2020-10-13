@@ -20,10 +20,8 @@
 package org.linphone;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -31,7 +29,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.telephony.PhoneStateListener;
@@ -64,8 +61,6 @@ import org.linphone.core.ProxyConfig;
 import org.linphone.core.Reason;
 import org.linphone.core.Tunnel;
 import org.linphone.core.TunnelConfig;
-import org.linphone.core.VersionUpdateCheckResult;
-import org.linphone.core.tools.H264Helper;
 import org.linphone.core.tools.Log;
 import org.linphone.settings.LinphonePreferences;
 import org.linphone.utils.LinphoneUtils;
@@ -91,7 +86,7 @@ public class LinphoneManager implements SensorEventListener {
     private final SensorManager mSensorManager;
     private final Sensor mProximity;
     private final MediaScanner mMediaScanner;
-    private Timer mTimer, mAutoAnswerTimer;
+    private Timer mTimer;
 
     private final LinphonePreferences mPrefs;
     private Core mCore;
@@ -183,8 +178,8 @@ public class LinphoneManager implements SensorEventListener {
                         } else if (state == State.IncomingReceived
                                 && (LinphonePreferences.instance().isAutoAnswerEnabled())
                                 && !getCallGsmON()) {
-                            TimerTask lTask =
-                                    new TimerTask() {
+                            LinphoneUtils.dispatchOnUIThreadAfter(
+                                    new Runnable() {
                                         @Override
                                         public void run() {
                                             if (mCore != null) {
@@ -194,9 +189,8 @@ public class LinphoneManager implements SensorEventListener {
                                                 }
                                             }
                                         }
-                                    };
-                            mAutoAnswerTimer = new Timer("Auto answer");
-                            mAutoAnswerTimer.schedule(lTask, mPrefs.getAutoAnswerTime());
+                                    },
+                                    mPrefs.getAutoAnswerTime());
                         } else if (state == State.End || state == State.Error) {
                             if (mCore.getCallsNb() == 0) {
                                 // Disabling proximity sensor
@@ -215,50 +209,6 @@ public class LinphoneManager implements SensorEventListener {
                                     && mCore.getConference() == null) {
                                 call.deferUpdate();
                             }
-                        }
-                    }
-
-                    @Override
-                    public void onVersionUpdateCheckResultReceived(
-                            Core core,
-                            VersionUpdateCheckResult result,
-                            String version,
-                            String url) {
-                        if (result == VersionUpdateCheckResult.NewVersionAvailable) {
-                            final String urlToUse = url;
-                            final String versionAv = version;
-                            LinphoneUtils.dispatchOnUIThreadAfter(
-                                    new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            AlertDialog.Builder builder =
-                                                    new AlertDialog.Builder(mContext);
-                                            builder.setMessage(
-                                                    getString(R.string.update_available)
-                                                            + ": "
-                                                            + versionAv);
-                                            builder.setCancelable(false);
-                                            builder.setNeutralButton(
-                                                    getString(R.string.ok),
-                                                    new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(
-                                                                DialogInterface dialogInterface,
-                                                                int i) {
-                                                            if (urlToUse != null) {
-                                                                Intent urlIntent =
-                                                                        new Intent(
-                                                                                Intent.ACTION_VIEW);
-                                                                urlIntent.setData(
-                                                                        Uri.parse(urlToUse));
-                                                                mContext.startActivity(urlIntent);
-                                                            }
-                                                        }
-                                                    });
-                                            builder.show();
-                                        }
-                                    },
-                                    1000);
                         }
                     }
 
@@ -392,7 +342,6 @@ public class LinphoneManager implements SensorEventListener {
         if (mAudioManager != null) mAudioManager.destroy();
 
         if (mTimer != null) mTimer.cancel();
-        if (mAutoAnswerTimer != null) mAutoAnswerTimer.cancel();
 
         if (mCore != null) {
             destroyCore();
@@ -443,9 +392,6 @@ public class LinphoneManager implements SensorEventListener {
         } catch (Exception e) {
             Log.e(e, "[Manager] Cannot start linphone");
         }
-
-        // H264 codec Management - set to auto mode -> MediaCodec >= android 5.0 >= OpenH264
-        H264Helper.setH264Mode(H264Helper.MODE_AUTO, mCore);
     }
 
     private synchronized void configureCore() {
@@ -798,20 +744,6 @@ public class LinphoneManager implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     /* Other stuff */
-
-    public void checkForUpdate() {
-        String url = LinphonePreferences.instance().getCheckReleaseUrl();
-        if (url != null && !url.isEmpty()) {
-            int lastTimestamp = LinphonePreferences.instance().getLastCheckReleaseTimestamp();
-            int currentTimeStamp = (int) System.currentTimeMillis();
-            int interval =
-                    mContext.getResources().getInteger(R.integer.time_between_update_check); // 24h
-            if (lastTimestamp == 0 || currentTimeStamp - lastTimestamp >= interval) {
-                mCore.checkForUpdate(BuildConfig.VERSION_NAME);
-                LinphonePreferences.instance().setLastCheckReleaseTimestamp(currentTimeStamp);
-            }
-        }
-    }
 
     public void enableDeviceRingtone(boolean use) {
         if (use) {
